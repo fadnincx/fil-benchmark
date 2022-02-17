@@ -14,6 +14,10 @@ type TimeLogEntry struct {
 	Start  int64  `json:"start"`
 	End    int64  `json:"end"`
 }
+type DelayEntry struct {
+	avgDelay float64
+	amount   uint64
+}
 
 var redisClient *redis.Client = nil
 var redisMutex sync.Mutex
@@ -70,13 +74,17 @@ func redisGetMsgWith2Times() {
 	}
 }
 
-func redisGetAvgDelay(cids []string, hosts []string) (uint64, float64, uint64) {
+func redisGetAvgDelay(cids []string, hosts []string) (uint64, float64, uint64, []DelayEntry) {
 	redisInitClient()
 	var amountOfResults uint64 = 0
 	var averageDelay float64 = 0
 	var notFinished uint64 = 0
+	var netDelay = make([]DelayEntry, len(hosts))
 	for _, cid := range cids {
-		for _, host := range hosts {
+
+		var netT = make([]int64, len(hosts))
+		var netS int64 = 0
+		for i, host := range hosts {
 			val, err := redisClient.Get(cid + "-" + host).Result()
 			if err == redis.Nil {
 				// Ignore no such entry
@@ -99,16 +107,51 @@ func redisGetAvgDelay(cids []string, hosts []string) (uint64, float64, uint64) {
 					continue
 				}
 				if stored.Start > 0 {
-
+					netS = stored.End
 					averageDelay = ((averageDelay * float64(amountOfResults)) + float64(stored.End-stored.Start)) / float64(amountOfResults+1)
 					amountOfResults += 1
-					fmt.Printf("%d = %d - %d  --> %f %d\n", stored.End-stored.Start, stored.End, stored.Start, averageDelay, amountOfResults)
+					// fmt.Printf("%d = %d - %d  --> %f %d\n", stored.End-stored.Start, stored.End, stored.Start, averageDelay, amountOfResults)
+				}
+				netT[i] = stored.End
+			}
+		}
+
+		if netS > 0 {
+			for i := range hosts {
+				if netT[i] != 0 {
+					netDelay[i].avgDelay = ((netDelay[i].avgDelay * float64(netDelay[i].amount)) + float64(netT[i]-netS)) / float64(netDelay[i].amount+1)
+					netDelay[i].amount += 1
+				}
+			}
+		}
+
+	}
+	fmt.Printf("%v unfinished messages found\n", notFinished)
+	return amountOfResults, averageDelay, notFinished, netDelay
+}
+func redisHasNonFinished(cids []string, hosts []string) bool {
+	redisInitClient()
+	for _, cid := range cids {
+		for _, host := range hosts {
+			val, err := redisClient.Get(cid + "-" + host).Result()
+			if err == redis.Nil {
+				// Ignore no such entry
+			} else if err != nil {
+				fmt.Println(err)
+			} else {
+				var stored TimeLogEntry
+				err = json.Unmarshal([]byte(val), &stored)
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				if stored.End == 0 {
+					return true
 				}
 			}
 		}
 	}
-	fmt.Printf("%v unfinished messages found\n", notFinished)
-	return amountOfResults, averageDelay, notFinished
+	return false
 }
 
 func redisScanAverageDelay(nodeHostname string, from int64, to int64) (uint64, float64, error) {

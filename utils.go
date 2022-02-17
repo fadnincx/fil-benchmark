@@ -106,7 +106,7 @@ func whoami() string {
 }
 func getRedisNode() string {
 
-	err, out, _ := cmd("k3s kubectl get pods -o wide | grep lotus-redis | awk '{print $6}' | wc -l")
+	err, out, _ := cmd("kubectl get pods -o wide | grep lotus-redis | awk '{print $6}' | wc -l")
 	if err != nil {
 		log.Printf("error getting pod amount: %v\n", err)
 	}
@@ -115,7 +115,7 @@ func getRedisNode() string {
 	fmt.Printf("Got %v pods\n", amount)
 
 	if amount > 0 {
-		err, ip, _ := cmd(fmt.Sprintf("k3s kubectl get pods -o wide | grep lotus-redis-0 | awk '{print $6}'"))
+		err, ip, _ := cmd(fmt.Sprintf("kubectl get pods -o wide | grep lotus-redis-0 | awk '{print $6}'"))
 		if err != nil {
 			log.Printf("error: %v\n", err)
 		}
