@@ -20,13 +20,19 @@ func main() {
 
 	// Define the testcases
 	testcases := []TestCase{
-		/*		{duration: 180, msgPerSec: 25},
-				{duration: 180, msgPerSec: 50},
-				{duration: 180, msgPerSec: 75},
-				{duration: 180, msgPerSec: 100},
-				{duration: 180, msgPerSec: 150},
-				{duration: 180, msgPerSec: 200},
-				{duration: 180, msgPerSec: 250},*/
+		{duration: 180, msgPerSec: 1},
+		{duration: 180, msgPerSec: 2},
+		{duration: 180, msgPerSec: 5},
+		{duration: 180, msgPerSec: 10},
+		{duration: 180, msgPerSec: 15},
+		{duration: 180, msgPerSec: 20},
+		{duration: 180, msgPerSec: 25},
+		{duration: 180, msgPerSec: 50},
+		{duration: 180, msgPerSec: 75},
+		{duration: 180, msgPerSec: 100},
+		{duration: 180, msgPerSec: 150},
+		{duration: 180, msgPerSec: 200},
+		{duration: 180, msgPerSec: 250},
 		{duration: 180, msgPerSec: 300},
 		{duration: 180, msgPerSec: 400},
 		{duration: 180, msgPerSec: 500},

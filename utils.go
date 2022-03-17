@@ -6,13 +6,58 @@ import (
 	"github.com/gorilla/websocket"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	"net/url"
 	"os/exec"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 )
+
+func Map(vs []BlockLog, f func(BlockLog) uint64) []uint64 {
+	vsm := make([]uint64, len(vs))
+	for i, v := range vs {
+		vsm[i] = f(v)
+	}
+	return vsm
+}
+func Max(vs []uint64) uint64 {
+	m := vs[0]
+	for _, v := range vs {
+		if v > m {
+			m = v
+		}
+	}
+	return m
+}
+func Min(vs []uint64) uint64 {
+	m := vs[0]
+	for _, v := range vs {
+		if v < m {
+			m = v
+		}
+	}
+	return m
+}
+func Mean(vs []uint64) uint64 {
+	total := uint64(0)
+	for _, v := range vs {
+		total += v
+	}
+	return uint64(math.Round(float64(total) / float64(len(vs))))
+}
+func Median(vs []uint64) uint64 {
+	sort.Slice(vs, func(i, j int) bool { return vs[i] < vs[j] })
+	mNumber := len(vs) / 2
+
+	if len(vs)%2 == 0 {
+		return (vs[mNumber-1] + vs[mNumber]) / 2
+	} else {
+		return vs[mNumber]
+	}
+}
 
 func websocketC(host string, interrupt chan bool, input chan string, output chan string) {
 
@@ -68,7 +113,15 @@ func websocketC(host string, interrupt chan bool, input chan string, output chan
 		}
 	}
 }
-
+func monitorChanOverflow(ch chan string, f func()) {
+	for true {
+		if len(ch) == cap(ch) {
+			f()
+		} else {
+			time.Sleep(1)
+		}
+	}
+}
 func remoteCmdResult(ip string, cmd string) string {
 	resp, err := http.Get("http://" + ip + "?" + url.PathEscape(cmd))
 	if err != nil {

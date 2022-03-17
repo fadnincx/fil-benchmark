@@ -16,7 +16,7 @@ var csvWriter *bufio.Writer
 func init() {
 
 	csvMutex.Lock()
-	file, err := os.OpenFile("data-"+time.Now().Format("2006-01-02 15:04:05")+".csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile("data-"+time.Now().Format("2006-01-02 15:04:05")+".csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)

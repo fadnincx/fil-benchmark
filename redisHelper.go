@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-redis/redis"
+	"sort"
 	"sync"
 )
 
@@ -13,6 +14,22 @@ type TimeLogEntry struct {
 	Cid    string `json:"cid"`
 	Start  int64  `json:"start"`
 	End    int64  `json:"end"`
+}
+type BlockLog struct {
+	Client   string `json:"client"`
+	Cid      string `json:"cid"`
+	MsgCount uint64 `json:"amount"`
+	Time     int64  `json:"time"`
+}
+type BlockStats struct {
+	minBlockInterval    uint64
+	maxBlockInterval    uint64
+	avgBlockInterval    uint64
+	medianBlockInterval uint64
+	minMsgPerBlock      uint64
+	maxMsgPerBlock      uint64
+	avgMsgPerBlock      uint64
+	medianMsgPerBlock   uint64
 }
 type DelayEntry struct {
 	avgDelay float64
@@ -72,6 +89,92 @@ func redisGetMsgWith2Times() {
 			break
 		}
 	}
+}
+
+func chainBlockAnalysis(blocks []BlockLog) BlockStats {
+
+	var stats BlockStats
+
+	stats.minBlockInterval = ^uint64(0)
+	stats.minMsgPerBlock = ^uint64(0)
+
+	blockIntervals := make([]uint64, len(blocks)-1)
+
+	for i, b := range blocks {
+
+		if i > 0 {
+			interval := uint64(blocks[i].Time - blocks[i-1].Time)
+
+			if interval < stats.minBlockInterval {
+				stats.minBlockInterval = interval
+			}
+			if interval > stats.maxBlockInterval {
+				stats.maxBlockInterval = interval
+			}
+
+			blockIntervals = append(blockIntervals, interval)
+		}
+		if b.MsgCount < stats.minMsgPerBlock {
+			stats.minMsgPerBlock = b.MsgCount
+		}
+		if b.MsgCount > stats.maxMsgPerBlock {
+			stats.maxMsgPerBlock = b.MsgCount
+		}
+
+	}
+
+	msgs := Map(blocks, func(b BlockLog) uint64 { return b.MsgCount })
+
+	stats.minBlockInterval = Min(blockIntervals)
+	stats.maxBlockInterval = Max(blockIntervals)
+	stats.avgBlockInterval = Mean(blockIntervals)
+	stats.medianBlockInterval = Median(blockIntervals)
+	stats.minMsgPerBlock = Min(msgs)
+	stats.maxMsgPerBlock = Max(msgs)
+	stats.avgMsgPerBlock = Mean(msgs)
+	stats.medianMsgPerBlock = Median(msgs)
+
+	return stats
+
+}
+func redisGetBlocks(from int64, to int64, node string) []BlockLog {
+	redisInitClient()
+	var cursor uint64
+	var output []BlockLog = make([]BlockLog, 0)
+	for {
+		var keys []string
+		var err error
+		keys, cursor, err = redisClient.Scan(cursor, "*-p-"+node+"*", 0).Result()
+		if err != nil {
+			fmt.Println(err)
+			return nil
+		}
+		for _, key := range keys {
+			val, err := redisClient.Get(key).Result()
+			if err == redis.Nil {
+				// Ignore no such entry
+			} else if err != nil {
+				fmt.Println(err)
+			} else {
+				var stored BlockLog
+				err = json.Unmarshal([]byte(val), &stored)
+				if err != nil {
+					fmt.Println(err)
+				}
+				if stored.Time >= from && stored.Time <= to {
+					output = append(output, stored)
+				}
+			}
+		}
+
+		if cursor == 0 { // no more keys
+			break
+		}
+	}
+	sort.SliceStable(output, func(i, j int) bool {
+		return output[i].Time < output[j].Time
+	})
+	return output
 }
 
 func redisGetAvgDelay(cids []string, hosts []string) (uint64, float64, uint64, []DelayEntry) {
