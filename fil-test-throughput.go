@@ -34,7 +34,7 @@ func throughputTest(nodes []node, hosts []string, cases []TestCase) {
 		go func(input chan string, cidChan chan string) {
 			for {
 				s := <-input
-				fmt.Println(s)
+				// fmt.Println(s)
 				var f interface{}
 				json.Unmarshal([]byte(s), &f)
 
@@ -51,7 +51,9 @@ func throughputTest(nodes []node, hosts []string, cases []TestCase) {
 		}(wsReadChan[i], cidSend)
 		wsInteruptChan[i] = make(chan bool)
 	}
-
+	fmt.Println("Sleep 1")
+	time.Sleep(90 * time.Second)
+	fmt.Println("Sleep 1")
 	// aggregate incoming cids until next output/Flush
 	go func(in chan string, out chan []string, sendOut chan bool) {
 		cids := make([]string, 100)
@@ -80,7 +82,7 @@ func throughputTest(nodes []node, hosts []string, cases []TestCase) {
 		// Start rate
 		for i := range nodes {
 			stopRateChan[i] = make(chan bool)
-			go sendAtRate(wsWriteChan[i], stopRateChan[i], testc.msgPerSec, nodes[i].wallet, nodes[(i+1)%len(nodes)].wallet, "10")
+			go sendAtRate(wsWriteChan[i], stopRateChan[i], testc.msgPerSec/float64(len(nodes)), nodes[i].wallet, nodes[(i+1)%len(nodes)].wallet, "10")
 		}
 
 		// Wait 90s for full saturation
@@ -137,31 +139,37 @@ func sendAtRate(sendChannel chan string, stop chan bool, rate float64, senderAdd
 
 }
 func outputCSVHeader(hosts []string) {
-	netDelay := make([]string, len(hosts))
+	// netDelay := make([]string, len(hosts))
+	msgStat := make([]string, len(hosts))
 	blockstats := make([]string, len(hosts))
 	for i := range hosts {
-		netDelay = append(netDelay, fmt.Sprintf("nDelAvg%d,nDelAmount%d", i, i))
+		//	netDelay = append(netDelay, fmt.Sprintf("nDelAvg%d,nDelAmount%d", i, i))
+		msgStat = append(msgStat, fmt.Sprintf("amount%d, min%d, max%d, avg%d, med%d", i, i, i, i, i))
 		blockstats = append(blockstats, fmt.Sprintf("minBlk%d,maxBlk%d,avgBlk%d,medBlk%d,minMsg%d,maxMsg%d,avgMsg%d,medMsg%d", i, i, i, i, i, i, i, i))
 	}
-	writeCsvLine(fmt.Sprintf("rate,amount,avg,unfinished,%s,%s", strings.Join(netDelay, ", "), strings.Join(blockstats, ", ")))
+	writeCsvLine(fmt.Sprintf("rate,amount,avg,unfinished,%s,%s", /*strings.Join(netDelay, ", "),*/ strings.Join(blockstats, ", ")))
 }
 func outputCSVLine(cids []string, hosts []string, rate float64, start int64, stop int64) {
-	amount, avg, unfinished, netDelay := redisGetAvgDelay(cids, hosts)
-	netDelayS := make([]string, len(netDelay))
+	msgStats := redisGetMsgStats(cids, hosts)
+	//amount, avg, unfinished, netDelay := redisGetAvgDelay(cids, hosts)
+	/*netDelayS := make([]string, len(netDelay))
 
 	for _, nDel := range netDelay {
 		netDelayS = append(netDelayS, fmt.Sprintf("%f, %d", nDel.avgDelay, nDel.amount))
-	}
+	}*/
 
+	msgStat := make([]string, len(hosts))
 	blockStats := make([]string, len(hosts))
-	for _, h := range hosts {
+	for i, h := range hosts {
+		msgStat = append(msgStat, fmt.Sprintf("%d, %d, %d, %d, %d", msgStats[i].amount, msgStats[i].min, msgStats[i].max, msgStats[i].avg, msgStats[i].med))
+
 		var s = chainBlockAnalysis(redisGetBlocks(start, stop, h))
 		blockStats = append(blockStats, fmt.Sprintf("%d, %d, %d, %d, %d, %d, %d, %d",
 			s.minBlockInterval, s.maxBlockInterval, s.avgBlockInterval, s.medianBlockInterval,
 			s.minMsgPerBlock, s.maxMsgPerBlock, s.avgMsgPerBlock, s.medianMsgPerBlock))
 	}
 
-	writeCsvLine(fmt.Sprintf("%f, %d, %f, %d, %s, %s\n", rate, amount, avg, unfinished, strings.Join(netDelayS, ", "), strings.Join(blockStats, ", ")))
-	fmt.Printf("Rate %v has %v messages with %vus delay\n", rate, amount, avg)
+	writeCsvLine(fmt.Sprintf("%f, %d, %f, %d, %s, %s\n", rate, strings.Join(msgStat, ", "), /*strings.Join(netDelayS, ", "),*/ strings.Join(blockStats, ", ")))
+	fmt.Printf("Rate %v has %v messages with %vus delay\n", rate, msgStats[0].amount, msgStats[0].avg)
 
 }

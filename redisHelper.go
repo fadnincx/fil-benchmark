@@ -21,6 +21,13 @@ type BlockLog struct {
 	MsgCount uint64 `json:"amount"`
 	Time     int64  `json:"time"`
 }
+type Stats struct {
+	min    uint64
+	max    uint64
+	avg    uint64
+	med    uint64
+	amount uint64
+}
 type BlockStats struct {
 	minBlockInterval    uint64
 	maxBlockInterval    uint64
@@ -175,6 +182,52 @@ func redisGetBlocks(from int64, to int64, node string) []BlockLog {
 		return output[i].Time < output[j].Time
 	})
 	return output
+}
+
+func redisGetMsgStats(cids []string, hosts []string) []Stats {
+	redisInitClient()
+
+	var stats []Stats = make([]Stats, len(hosts))
+
+	for _, host := range hosts {
+		var hostStats Stats
+		hostStats.min = ^uint64(0)
+		var entries []uint64 = make([]uint64, len(cids)*len(hosts))
+		for _, cid := range cids {
+			val, err := redisClient.Get(cid + "-" + host).Result()
+			if err == redis.Nil {
+				// Ignore no such entry
+			} else if err != nil {
+				fmt.Println(err)
+			} else {
+				var stored TimeLogEntry
+				err = json.Unmarshal([]byte(val), &stored)
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				if stored.End == 0 {
+					// notFinished++
+					continue
+				}
+				if stored.Start > stored.End {
+					fmt.Printf("ILLEGAL Start %v > End %v \n", stored.Start, stored.End)
+					continue
+				}
+				if stored.Start > 0 {
+					entries = append(entries, uint64(stored.End-stored.Start))
+				}
+			}
+		}
+		hostStats.min = Min(entries)
+		hostStats.max = Max(entries)
+		hostStats.avg = Mean(entries)
+		hostStats.med = Median(entries)
+		hostStats.amount = uint64(len(entries))
+		stats = append(stats, hostStats)
+	}
+
+	return stats
 }
 
 func redisGetAvgDelay(cids []string, hosts []string) (uint64, float64, uint64, []DelayEntry) {

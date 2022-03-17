@@ -114,13 +114,13 @@ func websocketC(host string, interrupt chan bool, input chan string, output chan
 	}
 }
 func monitorChanOverflow(ch chan string, f func()) {
-	for true {
+	/*for true {
 		if len(ch) == cap(ch) {
 			f()
 		} else {
-			time.Sleep(1)
+			time.Sleep(10)
 		}
-	}
+	}*/
 }
 func remoteCmdResult(ip string, cmd string) string {
 	resp, err := http.Get("http://" + ip + "?" + url.PathEscape(cmd))
