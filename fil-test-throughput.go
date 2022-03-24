@@ -136,11 +136,11 @@ func sendAtRate(sendChannel chan string, stop chan bool, rate float64, senderAdd
 
 }
 func outputCSVHeader(hosts []string) {
-	msgStat := make([]string, len(hosts))
+	var msgStat []string
 	for i := range hosts {
 		msgStat = append(msgStat, fmt.Sprintf("amount%d, min%d, max%d, avg%d, med%d", i, i, i, i, i))
 	}
-	msgNetDelay := make([]string, len(hosts)*len(hosts)-len(hosts))
+	var msgNetDelay []string
 	for i := 0; i < len(hosts)*len(hosts)-len(hosts); i++ {
 		msgNetDelay = append(msgNetDelay, fmt.Sprintf("desc%d, amount%d, min%d, max%d, avg%d, med%d", i, i, i, i, i, i))
 	}
@@ -148,12 +148,12 @@ func outputCSVHeader(hosts []string) {
 }
 func outputCSVLine(cids []string, hosts []string, rate float64, start int64, stop int64) {
 	msgStats := redisGetMsgStats(cids, hosts)
-	msgStat := make([]string, len(hosts))
+	var msgStat []string
 	for _, v := range msgStats {
 		msgStat = append(msgStat, fmt.Sprintf("%d, %d, %d, %d, %d", v.amount, v.min, v.max, v.avg, v.med))
 	}
 	msgNetDelays := redisGetMsgNetDelay(cids, hosts)
-	msgNetDelay := make([]string, len(msgNetDelays))
+	var msgNetDelay []string
 	for _, v := range msgNetDelays {
 		msgNetDelay = append(msgNetDelay, fmt.Sprintf("%s, %d, %d, %d, %d, %d", v.desc, v.amount, v.min, v.max, v.avg, v.med))
 	}
