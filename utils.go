@@ -13,7 +13,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 )
 
 func Map(vs []BlockLog, f func(BlockLog) uint64) []uint64 {
@@ -108,8 +107,6 @@ func websocketC(host string, interrupt chan bool, input chan string, output chan
 				return
 			}
 			return
-		default:
-			time.Sleep(1)
 		}
 	}
 }
