@@ -142,12 +142,21 @@ func outputCSVHeader(hosts []string) {
 	}
 	var msgNetDelay []string
 	for i := 0; i < len(hosts)*len(hosts)-len(hosts); i++ {
-		msgNetDelay = append(msgNetDelay, fmt.Sprintf("desc%d, amount%d, min%d, max%d, avg%d, med%d", i, i, i, i, i, i))
+		maxHost := len(hosts) - 1
+		base := i / (maxHost)
+		jBase := i - (base * maxHost)
+		if jBase >= base {
+			jBase++
+		}
+		comb := fmt.Sprintf("%d -> %d", base, jBase)
+		msgNetDelay = append(msgNetDelay, fmt.Sprintf("desc %v, amount %v, min %v, max %v, avg %v, med %v", comb, comb, comb, comb, comb, comb))
 	}
 	writeCsvLine(fmt.Sprintf("rate,%s,%s", strings.Join(msgStat, ", "), strings.Join(msgNetDelay, ", ")))
 }
 func outputCSVLine(cids []string, hosts []string, rate float64, start int64, stop int64) {
+	fmt.Printf("%d cids to check ", len(cids))
 	msgStats := redisGetMsgStats(cids, hosts)
+	fmt.Println(msgStats)
 	var msgStat []string
 	for _, v := range msgStats {
 		msgStat = append(msgStat, fmt.Sprintf("%d, %d, %d, %d, %d", v.amount, v.min, v.max, v.avg, v.med))
@@ -155,7 +164,7 @@ func outputCSVLine(cids []string, hosts []string, rate float64, start int64, sto
 	msgNetDelays := redisGetMsgNetDelay(cids, hosts)
 	var msgNetDelay []string
 	for _, v := range msgNetDelays {
-		msgNetDelay = append(msgNetDelay, fmt.Sprintf("%s, %d, %d, %d, %d, %d", v.desc, v.amount, v.min, v.max, v.avg, v.med))
+		msgNetDelay = append(msgNetDelay, fmt.Sprintf("%v, %d, %d, %d, %d, %d", v.desc, v.amount, v.min, v.max, v.avg, v.med))
 	}
 
 	writeCsvLine(fmt.Sprintf("%f, %v, %v\n", rate, strings.Join(msgStat, ", "), strings.Join(msgNetDelay, ", ")))

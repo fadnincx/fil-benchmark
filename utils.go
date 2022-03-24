@@ -23,6 +23,9 @@ func Map(vs []BlockLog, f func(BlockLog) uint64) []uint64 {
 	return vsm
 }
 func Max(vs []uint64) uint64 {
+	if len(vs) == 0 {
+		return 0
+	}
 	m := vs[0]
 	for _, v := range vs {
 		if v > m {
@@ -32,6 +35,9 @@ func Max(vs []uint64) uint64 {
 	return m
 }
 func Min(vs []uint64) uint64 {
+	if len(vs) == 0 {
+		return 0
+	}
 	m := vs[0]
 	for _, v := range vs {
 		if v < m {
@@ -41,6 +47,9 @@ func Min(vs []uint64) uint64 {
 	return m
 }
 func Mean(vs []uint64) uint64 {
+	if len(vs) == 0 {
+		return 0
+	}
 	total := uint64(0)
 	for _, v := range vs {
 		total += v
@@ -48,6 +57,9 @@ func Mean(vs []uint64) uint64 {
 	return uint64(math.Round(float64(total) / float64(len(vs))))
 }
 func Median(vs []uint64) uint64 {
+	if len(vs) == 0 {
+		return 0
+	}
 	sort.Slice(vs, func(i, j int) bool { return vs[i] < vs[j] })
 	mNumber := len(vs) / 2
 

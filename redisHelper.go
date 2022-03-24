@@ -71,7 +71,7 @@ func redisGetMsgStats(cids []string, hosts []string) []Stats {
 	redisInitClient()
 
 	// Init stats per host
-	var stats []Stats = make([]Stats, len(hosts))
+	var stats []Stats
 
 	// Get stats per host
 	for _, host := range hosts {
@@ -81,7 +81,7 @@ func redisGetMsgStats(cids []string, hosts []string) []Stats {
 		hostStats.min = ^uint64(0)
 
 		// Get processing time of entries origin on host
-		var entries = make([]uint64, len(cids))
+		var entries []uint64
 
 		// Iterate over given cids
 		for _, cid := range cids {
@@ -118,11 +118,12 @@ func redisGetMsgStats(cids []string, hosts []string) []Stats {
 				}
 			}
 		}
+
+		hostStats.amount = uint64(len(entries))
 		hostStats.min = Min(entries)
 		hostStats.max = Max(entries)
 		hostStats.avg = Mean(entries)
 		hostStats.med = Median(entries)
-		hostStats.amount = uint64(len(entries))
 		stats = append(stats, hostStats)
 	}
 
@@ -139,20 +140,20 @@ func redisGetMsgNetDelay(cids []string, hosts []string) []Stats {
 	redisInitClient()
 
 	// Init stats per host
-	var stats []Stats = make([]Stats, len(hosts))
+	var stats []Stats
 	var entries [][][]uint64 = make([][][]uint64, len(hosts))
 	// Get stats per host
 	for i, _ := range hosts {
 		entries[i] = make([][]uint64, len(hosts))
 		for j, _ := range hosts {
-			entries[i][j] = make([]uint64, len(cids))
+			entries[i][j] = make([]uint64, 0)
 		}
 	}
 
 	// Iterate over given cids
 	for _, cid := range cids {
 
-		var minEnd uint64 = ^uint64(0)
+		var minEnd = ^uint64(0)
 		var minHost = 0
 
 		for i, host := range hosts {
@@ -202,7 +203,7 @@ func redisGetMsgNetDelay(cids []string, hosts []string) []Stats {
 
 					// If not finished yet
 					if stored.End != 0 {
-						entries[i][minHost] = append(entries[i][minHost], uint64(stored.End)-minEnd)
+						entries[minHost][i] = append(entries[minHost][i], uint64(stored.End)-minEnd)
 					}
 				}
 			}
@@ -213,6 +214,7 @@ func redisGetMsgNetDelay(cids []string, hosts []string) []Stats {
 	for i, _ := range hosts {
 		for j, _ := range hosts {
 			if i != j {
+				fmt.Printf("%d %d is %d\n", i, j, len(stats))
 
 				// Init stats
 				var hostStats Stats
@@ -222,7 +224,7 @@ func redisGetMsgNetDelay(cids []string, hosts []string) []Stats {
 				hostStats.avg = Mean(entries[i][j])
 				hostStats.med = Median(entries[i][j])
 				hostStats.amount = uint64(len(entries[i][j]))
-				hostStats.desc = fmt.Sprintf("Msg-Delay: %s -> %s", hosts[j], hosts[i])
+				hostStats.desc = fmt.Sprintf("Msg-Delay: %s -> %s", hosts[i], hosts[j])
 				stats = append(stats, hostStats)
 			}
 
