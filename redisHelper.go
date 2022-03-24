@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/go-redis/redis"
 	"sort"
@@ -27,6 +26,7 @@ type Stats struct {
 	avg    uint64
 	med    uint64
 	amount uint64
+	desc   string
 }
 type BlockStats struct {
 	minBlockInterval    uint64
@@ -62,41 +62,181 @@ func redisInitClient() {
 	redisMutex.Unlock()
 }
 
-func redisGetMsgWith2Times() {
-	redisInitClient()
-	var cursor uint64
-	for {
-		var keys []string
-		var err error
-		keys, cursor, err = redisClient.Scan(cursor, "*", 0).Result()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		for _, key := range keys {
-			val, err := redisClient.Get(key).Result()
-			if err != nil {
-				fmt.Println(err)
-			}
-			var stored TimeLogEntry
-			err = json.Unmarshal([]byte(val), &stored)
-			if err != nil {
-				fmt.Println(err)
-			}
-			if stored.Start == 0 {
-				continue
-			}
-			if stored.End == 0 {
-				continue
-			}
-			fmt.Printf("Found %v\n", val)
-		}
+/**
+ * Get stats about processed messages
+ */
+func redisGetMsgStats(cids []string, hosts []string) []Stats {
 
-		if cursor == 0 { // no more keys
-			break
+	// Make sure client is initialized
+	redisInitClient()
+
+	// Init stats per host
+	var stats []Stats = make([]Stats, len(hosts))
+
+	// Get stats per host
+	for _, host := range hosts {
+
+		// Init stats
+		var hostStats Stats
+		hostStats.min = ^uint64(0)
+
+		// Get processing time of entries origin on host
+		var entries = make([]uint64, len(cids))
+
+		// Iterate over given cids
+		for _, cid := range cids {
+
+			// Get cid date on host
+			val, err := redisClient.Get(cid + "-" + host).Result()
+			if err == redis.Nil {
+				// Ignore no such entry
+			} else if err != nil {
+				fmt.Println(err) // some redis error
+			} else {
+
+				// Get object from json
+				var stored TimeLogEntry
+				err = json.Unmarshal([]byte(val), &stored)
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				// If not finished yet
+				if stored.End == 0 {
+					// notFinished++
+					continue
+				}
+
+				// Capture illegal start > end
+				if stored.Start > stored.End {
+					fmt.Printf("ILLEGAL Start %v > End %v \n", stored.Start, stored.End)
+					continue
+				}
+				// Get those entries with a start time
+				if stored.Start > 0 {
+					entries = append(entries, uint64(stored.End-stored.Start))
+				}
+			}
+		}
+		hostStats.min = Min(entries)
+		hostStats.max = Max(entries)
+		hostStats.avg = Mean(entries)
+		hostStats.med = Median(entries)
+		hostStats.amount = uint64(len(entries))
+		stats = append(stats, hostStats)
+	}
+
+	return stats
+
+}
+
+/**
+ * Get network delay on processed messages
+ */
+func redisGetMsgNetDelay(cids []string, hosts []string) []Stats {
+
+	// Make sure client is initialized
+	redisInitClient()
+
+	// Init stats per host
+	var stats []Stats = make([]Stats, len(hosts))
+	var entries [][][]uint64 = make([][][]uint64, len(hosts))
+	// Get stats per host
+	for i, _ := range hosts {
+		entries[i] = make([][]uint64, len(hosts))
+		for j, _ := range hosts {
+			entries[i][j] = make([]uint64, len(cids))
 		}
 	}
+
+	// Iterate over given cids
+	for _, cid := range cids {
+
+		var minEnd uint64 = ^uint64(0)
+		var minHost = 0
+
+		for i, host := range hosts {
+
+			// Get cid date on host
+			val, err := redisClient.Get(cid + "-" + host).Result()
+			if err == redis.Nil {
+				// Ignore no such entry
+			} else if err != nil {
+				fmt.Println(err) // some redis error
+			} else {
+
+				// Get object from json
+				var stored TimeLogEntry
+				err = json.Unmarshal([]byte(val), &stored)
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				// If not finished yet
+				if stored.End > 0 && uint64(stored.End) < minEnd {
+					minEnd = uint64(stored.End)
+					minHost = i
+					break
+				}
+			}
+
+		}
+
+		if minEnd != 0 {
+
+			for i, host := range hosts {
+				// Get cid date on host
+				val, err := redisClient.Get(cid + "-" + host).Result()
+				if err == redis.Nil {
+					// Ignore no such entry
+				} else if err != nil {
+					fmt.Println(err) // some redis error
+				} else {
+
+					// Get object from json
+					var stored TimeLogEntry
+					err = json.Unmarshal([]byte(val), &stored)
+					if err != nil {
+						fmt.Println(err)
+					}
+
+					// If not finished yet
+					if stored.End != 0 {
+						entries[i][minHost] = append(entries[i][minHost], uint64(stored.End)-minEnd)
+					}
+				}
+			}
+
+		}
+
+	}
+	for i, _ := range hosts {
+		for j, _ := range hosts {
+			if i != j {
+
+				// Init stats
+				var hostStats Stats
+				hostStats.min = ^uint64(0)
+				hostStats.min = Min(entries[i][j])
+				hostStats.max = Max(entries[i][j])
+				hostStats.avg = Mean(entries[i][j])
+				hostStats.med = Median(entries[i][j])
+				hostStats.amount = uint64(len(entries[i][j]))
+				hostStats.desc = fmt.Sprintf("Msg-Delay: %s -> %s", hosts[j], hosts[i])
+				stats = append(stats, hostStats)
+			}
+
+		}
+
+	}
+
+	return stats
+
 }
+
+/**
+ *
+ */
 
 func chainBlockAnalysis(blocks []BlockLog) BlockStats {
 
@@ -184,107 +324,6 @@ func redisGetBlocks(from int64, to int64, node string) []BlockLog {
 	return output
 }
 
-func redisGetMsgStats(cids []string, hosts []string) []Stats {
-	redisInitClient()
-
-	var stats []Stats = make([]Stats, len(hosts))
-
-	for _, host := range hosts {
-		var hostStats Stats
-		hostStats.min = ^uint64(0)
-		var entries []uint64 = make([]uint64, len(cids)*len(hosts))
-		for _, cid := range cids {
-			val, err := redisClient.Get(cid + "-" + host).Result()
-			if err == redis.Nil {
-				// Ignore no such entry
-			} else if err != nil {
-				fmt.Println(err)
-			} else {
-				var stored TimeLogEntry
-				err = json.Unmarshal([]byte(val), &stored)
-				if err != nil {
-					fmt.Println(err)
-				}
-
-				if stored.End == 0 {
-					// notFinished++
-					continue
-				}
-				if stored.Start > stored.End {
-					fmt.Printf("ILLEGAL Start %v > End %v \n", stored.Start, stored.End)
-					continue
-				}
-				if stored.Start > 0 {
-					entries = append(entries, uint64(stored.End-stored.Start))
-				}
-			}
-		}
-		hostStats.min = Min(entries)
-		hostStats.max = Max(entries)
-		hostStats.avg = Mean(entries)
-		hostStats.med = Median(entries)
-		hostStats.amount = uint64(len(entries))
-		stats = append(stats, hostStats)
-	}
-
-	return stats
-}
-
-func redisGetAvgDelay(cids []string, hosts []string) (uint64, float64, uint64, []DelayEntry) {
-	redisInitClient()
-	var amountOfResults uint64 = 0
-	var averageDelay float64 = 0
-	var notFinished uint64 = 0
-	var netDelay = make([]DelayEntry, len(hosts))
-	for _, cid := range cids {
-
-		var netT = make([]int64, len(hosts))
-		var netS int64 = 0
-		for i, host := range hosts {
-			val, err := redisClient.Get(cid + "-" + host).Result()
-			if err == redis.Nil {
-				// Ignore no such entry
-			} else if err != nil {
-				fmt.Println(err)
-			} else {
-				var stored TimeLogEntry
-				err = json.Unmarshal([]byte(val), &stored)
-				if err != nil {
-					fmt.Println(err)
-				}
-				// fmt.Printf("Redis: %v --> %v\n", cid+"-"+host, val)
-
-				if stored.End == 0 {
-					notFinished++
-					continue
-				}
-				if stored.Start > stored.End {
-					fmt.Printf("ILLEGAL Start %v > End %v \n", stored.Start, stored.End)
-					continue
-				}
-				if stored.Start > 0 {
-					netS = stored.End
-					averageDelay = ((averageDelay * float64(amountOfResults)) + float64(stored.End-stored.Start)) / float64(amountOfResults+1)
-					amountOfResults += 1
-					// fmt.Printf("%d = %d - %d  --> %f %d\n", stored.End-stored.Start, stored.End, stored.Start, averageDelay, amountOfResults)
-				}
-				netT[i] = stored.End
-			}
-		}
-
-		if netS > 0 {
-			for i := range hosts {
-				if netT[i] != 0 {
-					netDelay[i].avgDelay = ((netDelay[i].avgDelay * float64(netDelay[i].amount)) + float64(netT[i]-netS)) / float64(netDelay[i].amount+1)
-					netDelay[i].amount += 1
-				}
-			}
-		}
-
-	}
-	fmt.Printf("%v unfinished messages found\n", notFinished)
-	return amountOfResults, averageDelay, notFinished, netDelay
-}
 func redisHasNonFinished(cids []string, hosts []string) bool {
 	redisInitClient()
 	for _, cid := range cids {
@@ -308,51 +347,4 @@ func redisHasNonFinished(cids []string, hosts []string) bool {
 		}
 	}
 	return false
-}
-
-func redisScanAverageDelay(nodeHostname string, from int64, to int64) (uint64, float64, error) {
-	redisInitClient()
-	var cursor uint64
-	var amountOfResults uint64 = 0
-	var averageDelay float64 = 0
-	for {
-		var keys []string
-		var err error
-		keys, cursor, err = redisClient.Scan(cursor, "*-"+nodeHostname+"*", 0).Result()
-		if err != nil {
-			fmt.Println(err)
-			return 0, 0.0, errors.New("Error scanning redis")
-		}
-		fmt.Printf("Redis keys: %v \n", keys)
-		for _, key := range keys {
-			val, err := redisClient.Get(key).Result()
-			if err != nil {
-				fmt.Println(err)
-			}
-			var stored TimeLogEntry
-			err = json.Unmarshal([]byte(val), &stored)
-			if err != nil {
-				fmt.Println(err)
-			}
-			fmt.Printf("Redis: %v\n", val)
-			if stored.Start < from {
-				continue
-			}
-			if stored.Start > to {
-				continue
-			}
-			if stored.End == 0 {
-				continue
-			}
-			averageDelay = ((averageDelay * float64(amountOfResults)) + float64(stored.End-stored.Start)) / float64(amountOfResults+1)
-			amountOfResults += 1
-		}
-
-		if cursor == 0 { // no more keys
-			break
-		}
-	}
-
-	return amountOfResults, averageDelay, nil
-
 }
