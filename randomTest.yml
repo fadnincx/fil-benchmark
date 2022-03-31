@@ -1,0 +1,31 @@
+tests:
+  - name: "3min 1msg"
+    duration: 180 # in seconds
+    msgPerSecPer: 1
+  - name: "3min 2msg"
+    duration: 180 # in seconds
+    msgPerSecPer: 2
+  - name: "3min 5msg"
+    duration: 180 # in seconds
+    msgPerSecPer: 5
+  - name: "3min 10msg"
+    duration: 180 # in seconds
+    msgPerSecPer: 10
+  - name: "3min 15msg"
+    duration: 180 # in seconds
+    msgPerSecPer: 15
+  - name: "3min 20msg"
+    duration: 180 # in seconds
+    msgPerSecPer: 20
+  - name: "3min 25msg"
+    duration: 180 # in seconds
+    msgPerSecPer: 25
+  - name: "3min 50msg"
+    duration: 180 # in seconds
+    msgPerSecPer: 50
+  - name: "3min 75msg"
+    duration: 180 # in seconds
+    msgPerSecPer: 75
+  - name: "3min 100msg"
+    duration: 180 # in seconds
+    msgPerSecPer: 100

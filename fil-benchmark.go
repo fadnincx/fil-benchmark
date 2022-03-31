@@ -1,7 +1,13 @@
 package main
 
 import (
-	"fmt"
+	"fil-benchmark/datastructures"
+	testbed "fil-benchmark/external-testbed"
+	benchmark "fil-benchmark/fil-benchmark-exec"
+	reporting "fil-benchmark/fil-reporting"
+	"log"
+	"os"
+	"path/filepath"
 )
 
 /**
@@ -9,41 +15,23 @@ import (
  */
 func main() {
 
-	// Check that benchmark is run as root, as commands needed to be executed as root
-	if whoami() != "root" {
-		fmt.Printf("NEED TO RUN AS ROOT!\n")
-		return
-	}
-
 	// Get current nodes
-	nodes, hosts := getCurrentNodes()
+	nodes := testbed.GetTestBed().GetLotusHosts()
 
 	// Define the testcases
-	testcases := []TestCase{
-		{duration: 180, msgPerSec: 1},
-		{duration: 180, msgPerSec: 2},
-		{duration: 180, msgPerSec: 5},
-		{duration: 180, msgPerSec: 10},
-		{duration: 180, msgPerSec: 15},
-		{duration: 180, msgPerSec: 20},
-		{duration: 180, msgPerSec: 25},
-		{duration: 180, msgPerSec: 50},
-		{duration: 180, msgPerSec: 75},
-		{duration: 180, msgPerSec: 100},
-		{duration: 180, msgPerSec: 150},
-		{duration: 180, msgPerSec: 200},
-		{duration: 180, msgPerSec: 250},
-		{duration: 180, msgPerSec: 300},
-		{duration: 180, msgPerSec: 400},
-		{duration: 180, msgPerSec: 500},
-		{duration: 180, msgPerSec: 750},
-		{duration: 180, msgPerSec: 1000},
-		{duration: 180, msgPerSec: 1500},
-		{duration: 180, msgPerSec: 2000},
-		{duration: 180, msgPerSec: 2500},
+
+	testcaseFile := "exampleTest.yml"
+	if len(os.Args) == 2 {
+		testcaseFile = os.Args[1]
 	}
+	pwd, _ := os.Getwd()
+	log.Printf("Use testcase: %s\n", filepath.Join(pwd, testcaseFile))
+	testcases := datastructures.ReadTestcaseYaml(filepath.Join(pwd, testcaseFile))
+
+	// Init Reporting
+	report := reporting.StartTestReport(nodes)
 
 	// Run test
-	throughputTest(nodes, hosts, testcases)
+	benchmark.RunTestcases(testcases, nodes, report)
 
 }

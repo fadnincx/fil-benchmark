@@ -1,0 +1,179 @@
+---
+tests:
+  - name: "Std Test 1msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 1
+  - name: "Std Test 1.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 1.5
+  - name: "Std Test 2msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 2
+  - name: "Std Test 2.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 2.5
+  - name: "Std Test 3msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 3
+  - name: "Std Test 3.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 3.5
+  - name: "Std Test 4msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 4
+  - name: "Std Test 4.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 4.5
+  - name: "Std Test 5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 5
+  - name: "Std Test 5.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 5.5
+  - name: "Std Test 6msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 6
+  - name: "Std Test 6.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 6.5
+  - name: "Std Test 7msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 7
+  - name: "Std Test 7.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 7.5
+  - name: "Std Test 8msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 8
+  - name: "Std Test 8.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 8.5
+  - name: "Std Test 9msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 9
+  - name: "Std Test 9.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 9.5
+  - name: "Std Test 10msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 10
+  - name: "Std Test 10.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 10.5
+  - name: "Std Test 11msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 11
+  - name: "Std Test 11.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 11.5
+  - name: "Std Test 12msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 12
+  - name: "Std Test 12.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 12.5
+  - name: "Std Test 13msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 13
+  - name: "Std Test 13.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 13.5
+  - name: "Std Test 14msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 14
+  - name: "Std Test 14.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 14.5
+  - name: "Std Test 15msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 15
+  - name: "Std Test 15.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 15.5
+  - name: "Std Test 16msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 16
+  - name: "Std Test 16.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 16.5
+  - name: "Std Test 17msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 17
+  - name: "Std Test 17.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 17.5
+  - name: "Std Test 18msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 18
+  - name: "Std Test 18.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 18.5
+  - name: "Std Test 19msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 19
+  - name: "Std Test 19.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 19.5
+  - name: "Std Test 20msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 20
+  - name: "Std Test 20.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 20.5
+  - name: "Std Test 21msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 21
+  - name: "Std Test 21.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 21.5
+  - name: "Std Test 22msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 22
+  - name: "Std Test 22.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 22.5
+  - name: "Std Test 23msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 23
+  - name: "Std Test 23.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 23.5
+  - name: "Std Test 24msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 24
+  - name: "Std Test 24.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 24.5
+  - name: "Std Test 25msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 25
+  - name: "Std Test 25.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 25.5
+  - name: "Std Test 26msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 26
+  - name: "Std Test 26.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 26.5
+  - name: "Std Test 27msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 27
+  - name: "Std Test 27.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 27.5
+  - name: "Std Test 28msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 28
+  - name: "Std Test 28.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 28.5
+  - name: "Std Test 29msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 29
+  - name: "Std Test 29.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 29.5
+  - name: "Std Test 30msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 30

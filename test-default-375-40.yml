@@ -1,0 +1,20 @@
+---
+tests:
+  - name: "Std Test 37.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 37.5
+  - name: "Std Test 38msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 38
+  - name: "Std Test 38.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 38.5
+  - name: "Std Test 39msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 39
+  - name: "Std Test 39.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 39.5
+  - name: "Std Test 40msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 40

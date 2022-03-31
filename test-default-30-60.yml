@@ -1,0 +1,38 @@
+---
+tests:
+  - name: "Std Test 30msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 30
+  - name: "Std Test 32.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 32.5
+  - name: "Std Test 35msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 35
+  - name: "Std Test 37.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 37.5
+  - name: "Std Test 40msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 40
+  - name: "Std Test 42.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 42.5
+  - name: "Std Test 45msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 45
+  - name: "Std Test 47.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 47.5
+  - name: "Std Test 50msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 50
+  - name: "Std Test 52.5msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 52.5
+  - name: "Std Test 55msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 55
+  - name: "Std Test 60msg 5min"
+    duration: 300 # in seconds
+    msgPerSecPer: 60
