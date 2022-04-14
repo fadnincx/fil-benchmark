@@ -26,8 +26,10 @@ func RunTestcases(cases []datastructures.TestCase, nodes []datastructures.Node, 
 			for {
 				s := <-input
 				var f interface{}
-				json.Unmarshal([]byte(s), &f)
-
+				err := json.Unmarshal([]byte(s), &f)
+				if err != nil {
+					continue
+				}
 				m := f.(map[string]interface{})
 				resultmap := m["result"]
 				r := resultmap.(map[string]interface{})
