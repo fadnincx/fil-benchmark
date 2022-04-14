@@ -81,6 +81,8 @@ func RunTestcases(cases []datastructures.TestCase, nodes []datastructures.Node, 
 			stopRateChan[i] <- true
 		}
 
+		time.Sleep(15 * time.Second)
+
 	}
 	log.Println("Finished tests")
 
@@ -99,6 +101,8 @@ func sendAtRate(sendChannel chan string, stop chan bool, rate float64, senderAdd
 	for sendId := 5; ; sendId++ {
 		select {
 		case <-stop:
+			time.Sleep(5 * time.Second)
+			sendChannel <- "{\"jsonrpc\":\"2.0\",\"method\":\"Filecoin.MpoolClear\",\"params\":[true],\"id\":" + strconv.Itoa(sendId) + "}"
 			return
 		default:
 			sendChannel <- "{\"jsonrpc\":\"2.0\",\"method\":\"Filecoin.MpoolPushMessage\",\"params\":[{\"Version\":0,\"To\":\"" + receiverAddress + "\",\"From\":\"" + senderAddress + "\",\"Value\":\"" + amount + "\",\"GasLimit\":0,\"GasFeeCap\":\"0\",\"GasPremium\":\"0\",\"Method\":0,\"CID\":{}},{\"MaxFee\":\"0\"}],\"id\":" + strconv.Itoa(sendId) + "}"
