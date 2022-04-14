@@ -5,6 +5,7 @@ import (
 	"fil-benchmark/datastructures"
 	"fmt"
 	"github.com/go-redis/redis"
+	"sort"
 )
 
 /**
@@ -176,5 +177,72 @@ func redisGetMsgNetDelay(cids []string, hosts []string) []datastructures.Stats {
 	}
 
 	return stats
+
+}
+
+/**
+ * Get Block stats
+ */
+func redisGetBlockStats(hosts []string, start int64, stop int64) []datastructures.BlockLogAgg {
+	redisInitClient()
+	var cursor uint64
+	var agg = make([]datastructures.BlockLogAgg, 0)
+	for host_id, host := range hosts {
+		for {
+			var keys []string
+			var err error
+			keys, cursor, err = redisClient.Scan(cursor, "*-b-"+host+"*", 0).Result()
+			if err != nil {
+				fmt.Println(err)
+				return nil
+			}
+			for _, key := range keys {
+				val, err := redisClient.Get(key).Result()
+				if err == redis.Nil {
+					// Ignore no such entry
+				} else if err != nil {
+					fmt.Println(err)
+				} else {
+					var stored datastructures.BlockLog
+					err = json.Unmarshal([]byte(val), &stored)
+					if err != nil {
+						fmt.Println(err)
+					}
+					if stored.FirstKnown >= start && stored.Accepted <= stop {
+
+						assigned := false
+						for _, b := range agg {
+							if b.Cid == stored.Cid {
+								assigned = true
+								b.FirstKnown[host_id] = stored.FirstKnown
+								b.Accepted[host_id] = stored.Accepted
+								if stored.FirstKnown < b.MinTime {
+									b.MinTime = stored.FirstKnown
+									b.MinTimeHost = int64(host_id)
+								}
+							}
+						}
+						if !assigned {
+							b := datastructures.BlockLogAgg{Cid: stored.Cid, FirstKnown: make([]int64, len(hosts)), Accepted: make([]int64, len(hosts))}
+							b.FirstKnown[host_id] = stored.FirstKnown
+							b.Accepted[host_id] = stored.Accepted
+							b.MinTime = stored.FirstKnown
+							b.MinTimeHost = int64(host_id)
+							agg = append(agg, b)
+						}
+					}
+				}
+			}
+
+			if cursor == 0 { // no more keys
+				break
+			}
+		}
+	}
+	sort.SliceStable(agg, func(i, j int) bool {
+		return agg[i].MinTime < agg[j].MinTime
+	})
+
+	return agg
 
 }

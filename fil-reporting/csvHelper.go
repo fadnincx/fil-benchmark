@@ -11,36 +11,51 @@ import (
 	"time"
 )
 
-var csvMutex sync.Mutex
-var csvWriter *bufio.Writer
-var hasHeader = false
+type CsvHelper struct {
+	mutex     sync.Mutex
+	writer    *bufio.Writer
+	hasHeader bool
+}
+
+var timeLogCsv *CsvHelper
+var blockLogCsv *CsvHelper
 
 func init() {
 
-	csvMutex.Lock()
+	timeLogCsv = &CsvHelper{hasHeader: false}
+	blockLogCsv = &CsvHelper{hasHeader: false}
+
 	pwd, _ := os.Getwd()
-	dataFile := "data-" + time.Now().Format("20060102-150405") + ".csv"
+
+	timeLogCsvFile := "data-time-" + time.Now().Format("20060102-150405") + ".csv"
+	blockLogCsvFile := "data-block-" + time.Now().Format("20060102-150405") + ".csv"
+
 	if len(os.Args) == 2 {
-		dataFile = "data-" + strings.Split(os.Args[1], ".")[0] + "-" + time.Now().Format("2006-01-02 15:04:05") + ".csv"
-	} else if len(os.Args) == 3 {
-		dataFile = os.Args[2]
+		timeLogCsvFile = "data-time-" + strings.Split(os.Args[1], ".")[0] + "-" + time.Now().Format("2006-01-02 15:04:05") + ".csv"
+		blockLogCsvFile = "data-block-" + strings.Split(os.Args[1], ".")[0] + "-" + time.Now().Format("2006-01-02 15:04:05") + ".csv"
 	}
-	if !filepath.IsAbs(dataFile) {
-		dataFile = filepath.Join(pwd, dataFile)
-	}
-	file, err := os.OpenFile(dataFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	os.Chmod(dataFile, 0666)
+
+	timeLogCsvFile = filepath.Join(pwd, timeLogCsvFile)
+	blockLogCsvFile = filepath.Join(pwd, blockLogCsvFile)
+
+	timeLogCsvF, err := os.OpenFile(timeLogCsvFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)
 	}
-	csvWriter = bufio.NewWriter(file)
+	blockLogCsvF, err := os.OpenFile(blockLogCsvFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatalf("failed creating file: %s", err)
+	}
 
-	hasHeader = false
-	csvMutex.Unlock()
+	os.Chmod(timeLogCsvFile, 0666)
+	os.Chmod(blockLogCsvFile, 0666)
+
+	timeLogCsv.writer = bufio.NewWriter(timeLogCsvF)
+	blockLogCsv.writer = bufio.NewWriter(blockLogCsvF)
 
 }
 
-func writeCsvLine(line string, header string) {
+func (csv *CsvHelper) writeCsvLine(line string, header string) {
 
 	if !strings.HasSuffix(header, "\n") {
 		line += "\n"
@@ -50,25 +65,25 @@ func writeCsvLine(line string, header string) {
 		line += "\n"
 	}
 
-	csvMutex.Lock()
+	csv.mutex.Lock()
 
-	if !hasHeader {
-		_, err := csvWriter.WriteString(header)
+	if !csv.hasHeader {
+		_, err := csv.writer.WriteString(header)
 		if err != nil {
 			fmt.Printf("Write CSV Header: %v\n", err)
 		} else {
-			hasHeader = true
+			csv.hasHeader = true
 		}
 	}
 
-	_, err := csvWriter.WriteString(line)
+	_, err := csv.writer.WriteString(line)
 	if err != nil {
 		fmt.Printf("Write CSV: %v\n", err)
 	}
-	err = csvWriter.Flush()
+	err = csv.writer.Flush()
 	if err != nil {
 		fmt.Printf("Write CSV Flush: %v\n", err)
 	}
 
-	csvMutex.Unlock()
+	csv.mutex.Unlock()
 }

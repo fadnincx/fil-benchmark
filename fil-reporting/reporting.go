@@ -111,6 +111,27 @@ func doStats(hosts []string, rate float64, cids []string, starttime uint64, stop
 	line := fmt.Sprintf("%f, %v, %v\n", rate, strings.Join(msgStat, ", "), strings.Join(msgNetDelay, ", "))
 	header := fmt.Sprintf("rate, %v, %v\n", strings.Join(msgStatHeader, ", "), strings.Join(msgNetDelayHeader, ", "))
 
-	writeCsvLine(line, header)
+	timeLogCsv.writeCsvLine(line, header)
 	fmt.Printf("Rate %v has %v messages with %vus delay\n", rate, msgStats[0].Amount, msgStats[0].Avg)
+}
+
+func doBlockStats(hosts []string, starttime int64, stoptime int64) {
+	aggBlockStats := redisGetBlockStats(hosts, starttime, stoptime)
+	var headerBlocks []string
+	headerBlocks = append(headerBlocks, fmt.Sprintf("cid, minFirstSeen, minFirstSeenHost"))
+	for i, _ := range hosts {
+		headerBlocks = append(headerBlocks, fmt.Sprintf("firstSeen%d, approved%d", i, i))
+	}
+	header := strings.Join(headerBlocks, ", ")
+
+	for _, b := range aggBlockStats {
+		var lineBlocks []string
+		lineBlocks = append(lineBlocks, fmt.Sprintf("%s, %d, %d", b.Cid, b.MinTime, b.MinTimeHost))
+		for i, _ := range hosts {
+			lineBlocks = append(lineBlocks, fmt.Sprintf("%d, %d", b.FirstKnown[i], b.Accepted[i]))
+		}
+		blockLogCsv.writeCsvLine(strings.Join(lineBlocks, ", "), header)
+
+	}
+
 }
