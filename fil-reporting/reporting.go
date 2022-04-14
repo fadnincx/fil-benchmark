@@ -113,6 +113,8 @@ func doStats(hosts []string, rate float64, cids []string, starttime uint64, stop
 
 	timeLogCsv.writeCsvLine(line, header)
 	fmt.Printf("Rate %v has %v messages with %vus delay\n", rate, msgStats[0].Amount, msgStats[0].Avg)
+
+	doBlockStats(hosts, int64(starttime), int64(stoptime))
 }
 
 func doBlockStats(hosts []string, starttime int64, stoptime int64) {
