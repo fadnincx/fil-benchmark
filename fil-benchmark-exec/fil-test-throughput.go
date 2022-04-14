@@ -95,7 +95,7 @@ func RunTestcases(cases []datastructures.TestCase, nodes []datastructures.Node, 
 
 func sendAtRate(sendChannel chan string, stop chan bool, rate float64, senderAddress string, receiverAddress string, amount string) {
 	fmt.Printf("Set rate to %v\n", rate)
-
+	sendChannel <- "{\"jsonrpc\":\"2.0\",\"method\":\"Filecoin.MpoolClear\",\"params\":[true],\"id\":0}"
 	lastTime := time.Now().UnixNano()
 
 	for sendId := 5; ; sendId++ {
