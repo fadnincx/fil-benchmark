@@ -45,6 +45,8 @@ func RunTestcases(cases []datastructures.TestCase, nodes []datastructures.Node, 
 		go connect2LotusWsApi(nodes[i], wsInteruptChan[i], wsWriteChan[i], wsReadChan[i])
 	}
 
+	time.Sleep(5 * time.Second)
+
 	for _, testc := range cases {
 
 		log.Printf("Start test case %v\n", testc)
