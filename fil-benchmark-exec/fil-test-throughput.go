@@ -31,13 +31,22 @@ func RunTestcases(cases []datastructures.TestCase, nodes []datastructures.Node, 
 					continue
 				}
 				m := f.(map[string]interface{})
-				resultmap := m["result"]
-				r := resultmap.(map[string]interface{})
-				cidmap := r["CID"]
-				c := cidmap.(map[string]interface{})
-				cid := c["/"].(string)
-
-				cidChan <- cid
+				if m != nil {
+					resultmap := m["result"]
+					if resultmap != nil {
+						r := resultmap.(map[string]interface{})
+						if r != nil {
+							cidmap := r["CID"]
+							if cidmap != nil {
+								c := cidmap.(map[string]interface{})
+								if c != nil {
+									cid := c["/"].(string)
+									cidChan <- cid
+								}
+							}
+						}
+					}
+				}
 
 			}
 		}(wsReadChan[i], report.CidChan)
