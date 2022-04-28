@@ -62,7 +62,7 @@ func (_ K3s) GetRedisHost() string {
 	fmt.Printf("Got %v pods\n", amount)
 
 	if amount > 0 {
-		err, ip, _ := LocalCmd(fmt.Sprintf("{{println `NAME IP`}}{{range .items}}{{.metadata.name}} {{.status.podIP}}{{println ``}}{{end}}' | grep lotus-redis-0 | awk '{print $2}'"))
+		err, ip, _ := LocalCmd(fmt.Sprintf("kubectl get pods -o=go-template='{{println `NAME IP`}}{{range .items}}{{.metadata.name}} {{.status.podIP}}{{println ``}}{{end}}' | grep lotus-redis-0 | awk '{print $2}'"))
 		if err != nil {
 			log.Printf("error: %v\n", err)
 		}
