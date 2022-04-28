@@ -108,8 +108,17 @@ func doStats(hosts []string, rate float64, cids []string, starttime uint64, stop
 		msgNetDelayHeader = append(msgNetDelayHeader, "desc, amount, min, max, avg, med")
 	}
 
-	line := fmt.Sprintf("%f, %v, %v\n", rate, strings.Join(msgStat, ", "), strings.Join(msgNetDelay, ", "))
-	header := fmt.Sprintf("rate, %v, %v\n", strings.Join(msgStatHeader, ", "), strings.Join(msgNetDelayHeader, ", "))
+	// Get Multiple Block stats
+	multiBlockStats := redisGetMsgInMultipleBlocksStats(hosts[0], int64(starttime), int64(stoptime))
+	var multiBlockStat []string
+	var multiBlockStatHeader []string
+	for i := range multiBlockStats {
+		multiBlockStat = append(multiBlockStat, fmt.Sprintf("%d", multiBlockStats[i]))
+		multiBlockStatHeader = append(multiBlockStatHeader, fmt.Sprintf("# in %d block", i))
+	}
+
+	line := fmt.Sprintf("%f, %v, %v, %v\n", rate, strings.Join(msgStat, ", "), strings.Join(msgNetDelay, ", "), strings.Join(multiBlockStat, ", "))
+	header := fmt.Sprintf("rate, %v, %v, %v\n", strings.Join(msgStatHeader, ", "), strings.Join(msgNetDelayHeader, ", "), strings.Join(multiBlockStatHeader, ", "))
 
 	timeLogCsv.writeCsvLine(line, header)
 	fmt.Printf("Rate %v has %v messages with %vus delay\n", rate, msgStats[0].Amount, msgStats[0].Avg)
