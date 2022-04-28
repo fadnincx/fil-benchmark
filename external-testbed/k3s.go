@@ -19,7 +19,7 @@ func (_ K3s) GetLotusApiToken(node fil_benchmark_exec.Node) string {
 }
 func (_ K3s) GetLotusHosts() []fil_benchmark_exec.Node {
 	checkIsRoot()
-	err, out, _ := LocalCmd("kubectl get pods -o=go-template='{{println \"NAME IP\"}}{{range .items}}{{.metadata.name}} {{printf \"%s\\n\" .status.podIP}}{{end}}' | grep lotus-node | awk '{print $6}' | wc -l")
+	err, out, _ := LocalCmd("kubectl get pods -o=go-template='{{println `NAME IP`}}{{range .items}}{{.metadata.name}} {{.status.podIP}}{{println ``}}{{end}}' | grep lotus-node | awk '{print $2}' | wc -l")
 	if err != nil {
 		log.Printf("error getting pod amount: %v\n", err)
 	}
@@ -30,12 +30,12 @@ func (_ K3s) GetLotusHosts() []fil_benchmark_exec.Node {
 	resultNode := make([]fil_benchmark_exec.Node, amount, amount)
 
 	for i := 0; i < amount; i++ {
-		err, ip, _ := LocalCmd(fmt.Sprintf("kubectl get pods -o=go-template='{{println \"NAME IP\"}}{{range .items}}{{.metadata.name}} {{printf \"%s\\n\" .status.podIP}}{{end}}' | grep lotus-node-%d | awk '{print $6}'", i))
+		err, ip, _ := LocalCmd(fmt.Sprintf("kubectl get pods -o=go-template='{{println `NAME IP`}}{{range .items}}{{.metadata.name}} {{.status.podIP}}{{println ``}}{{end}}' | grep lotus-node-%d | awk '{print $2}'", i))
 		if err != nil {
 			log.Printf("error: %v\n", err)
 		}
 		resultNode[i].Ip = strings.TrimSuffix(ip, "\n")
-		err, hostname, _ := LocalCmd(fmt.Sprintf("kubectl get pods -o=go-template='{{println \"NAME IP\"}}{{range .items}}{{.metadata.name}} {{printf \"%s\\n\" .status.podIP}}{{end}}' | grep lotus-node-%d | awk '{print $1}'", i))
+		err, hostname, _ := LocalCmd(fmt.Sprintf("kubectl get pods -o=go-template='{{println `NAME IP`}}{{range .items}}{{.metadata.name}} {{.status.podIP}}{{println ``}}{{end}}' | grep lotus-node-%d | awk '{print $1}'", i))
 		if err != nil {
 			log.Printf("error: %v\n", err)
 		}
@@ -53,7 +53,7 @@ func (_ K3s) GetLotusHosts() []fil_benchmark_exec.Node {
 func (_ K3s) GetRedisHost() string {
 	checkIsRoot()
 
-	err, out, _ := LocalCmd("kubectl get pods -o=go-template='{{println \"NAME IP\"}}{{range .items}}{{.metadata.name}} {{printf \"%s\\n\" .status.podIP}}{{end}}' | grep lotus-redis | awk '{print $6}' | wc -l")
+	err, out, _ := LocalCmd("kubectl get pods -o=go-template='{{println `NAME IP`}}{{range .items}}{{.metadata.name}} {{.status.podIP}}{{println ``}}{{end}}' | grep lotus-redis | awk '{print $2}' | wc -l")
 	if err != nil {
 		log.Printf("error getting pod amount: %v\n", err)
 	}
@@ -62,7 +62,7 @@ func (_ K3s) GetRedisHost() string {
 	fmt.Printf("Got %v pods\n", amount)
 
 	if amount > 0 {
-		err, ip, _ := LocalCmd(fmt.Sprintf("kubectl get pods -o=go-template='{{println \"NAME IP\"}}{{range .items}}{{.metadata.name}} {{printf \"%s\\n\" .status.podIP}}{{end}}' | grep lotus-redis-0 | awk '{print $6}'"))
+		err, ip, _ := LocalCmd(fmt.Sprintf("{{println `NAME IP`}}{{range .items}}{{.metadata.name}} {{.status.podIP}}{{println ``}}{{end}}' | grep lotus-redis-0 | awk '{print $2}'"))
 		if err != nil {
 			log.Printf("error: %v\n", err)
 		}
