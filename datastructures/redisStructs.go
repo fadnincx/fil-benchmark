@@ -8,12 +8,14 @@ type TimeLogEntry struct {
 	End       int64  `json:"end"`
 }
 type BlockLog struct {
-	Client     string   `json:"client"`
-	Cid        string   `json:"cid"`
-	MsgCount   uint64   `json:"amount"`
-	MsgCids    []string `json:"msgcids"`
-	FirstKnown int64    `json:"firstKnown"`
-	Accepted   int64    `json:"accepted"`
+	Client      string   `json:"client"`
+	Cid         string   `json:"cid"`
+	MsgCount    uint64   `json:"amount"`
+	MsgCids     []string `json:"msgcids"`
+	FirstKnown  int64    `json:"firstKnown"`
+	Accepted    int64    `json:"accepted"`
+	TipsetEpoch string   `json:"tipsetEpoch"`
+	Miner       string   `json:"miner"`
 }
 
 type BlockLogAgg struct {

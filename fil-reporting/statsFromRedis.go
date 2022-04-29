@@ -293,3 +293,56 @@ func redisGetMsgInMultipleBlocksStats(host string, start int64, stop int64) []ui
 	return inAmount
 
 }
+
+func redisGetMsgInMultipleTipsets(host string, start int64, stop int64) []uint64 {
+	redisInitClient()
+	var cursor uint64
+	var cidMap = make(map[string]map[string]int)
+
+	for {
+		var keys []string
+		var err error
+		keys, cursor, err = redisClient.Scan(cursor, "*-b-"+host+"*", 0).Result()
+		if err != nil {
+			fmt.Println(err)
+			return nil
+		}
+		for _, key := range keys {
+			val, err := redisClient.Get(key).Result()
+			if err == redis.Nil {
+				// Ignore no such entry
+			} else if err != nil {
+				fmt.Println(err)
+			} else {
+				var stored datastructures.BlockLog
+				err = json.Unmarshal([]byte(val), &stored)
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				if stored.FirstKnown >= start && stored.Accepted <= stop && len(stored.MsgCids) > 0 {
+					for _, c := range stored.MsgCids {
+						cidMap[c][stored.TipsetEpoch] = cidMap[c][stored.TipsetEpoch] + 1
+					}
+				}
+			}
+		}
+
+		if cursor == 0 { // no more keys
+			break
+		}
+
+	}
+	var inAmount = make([]uint64, 32)
+	for _, v := range cidMap {
+		l := 0
+		for _, v2 := range v {
+			if v2 > 0 {
+				l++
+			}
+		}
+		inAmount[l] = inAmount[l] + 1
+	}
+	return inAmount
+
+}

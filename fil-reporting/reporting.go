@@ -100,25 +100,26 @@ func doStats(hosts []string, rate float64, cids []string, starttime uint64, stop
 	}
 
 	// Get Msg Network Delay
-	msgNetDelays := redisGetMsgNetDelay(cids, hosts)
-	var msgNetDelay []string
-	var msgNetDelayHeader []string
-	for _, v := range msgNetDelays {
-		msgNetDelay = append(msgNetDelay, fmt.Sprintf("%v, %d, %d, %d, %d, %d", v.Desc, v.Amount, v.Min, v.Max, v.Avg, v.Med))
-		msgNetDelayHeader = append(msgNetDelayHeader, "desc, amount, min, max, avg, med")
-	}
+	/*	msgNetDelays := redisGetMsgNetDelay(cids, hosts)
+		var msgNetDelay []string
+		var msgNetDelayHeader []string
+		for _, v := range msgNetDelays {
+			msgNetDelay = append(msgNetDelay, fmt.Sprintf("%v, %d, %d, %d, %d, %d", v.Desc, v.Amount, v.Min, v.Max, v.Avg, v.Med))
+			msgNetDelayHeader = append(msgNetDelayHeader, "desc, amount, min, max, avg, med")
+		}*/
 
 	// Get Multiple Block stats
 	multiBlockStats := redisGetMsgInMultipleBlocksStats(hosts[0], int64(starttime), int64(stoptime))
+	multiBlockStats2 := redisGetMsgInMultipleTipsets(hosts[0], int64(starttime), int64(stoptime))
 	var multiBlockStat []string
 	var multiBlockStatHeader []string
 	for i := range multiBlockStats {
-		multiBlockStat = append(multiBlockStat, fmt.Sprintf("%d", multiBlockStats[i]))
-		multiBlockStatHeader = append(multiBlockStatHeader, fmt.Sprintf("# in %d block", i))
+		multiBlockStat = append(multiBlockStat, fmt.Sprintf("%d, %d", multiBlockStats[i], multiBlockStats2[i]))
+		multiBlockStatHeader = append(multiBlockStatHeader, fmt.Sprintf("# in %d block, # in %d tipsets", i, i))
 	}
 
-	line := fmt.Sprintf("%f, %v, %v, %v\n", rate, strings.Join(msgStat, ", "), strings.Join(msgNetDelay, ", "), strings.Join(multiBlockStat, ", "))
-	header := fmt.Sprintf("rate, %v, %v, %v\n", strings.Join(msgStatHeader, ", "), strings.Join(msgNetDelayHeader, ", "), strings.Join(multiBlockStatHeader, ", "))
+	line := fmt.Sprintf("%f, %v, %v, %v\n", rate, strings.Join(msgStat, ", "), strings.Join(multiBlockStat, ", "))
+	header := fmt.Sprintf("rate, %v, %v, %v\n", strings.Join(msgStatHeader, ", "), strings.Join(multiBlockStatHeader, ", "))
 
 	timeLogCsv.writeCsvLine(line, header)
 	fmt.Printf("Rate %v has %v messages with %vus delay\n", rate, msgStats[0].Amount, msgStats[0].Avg)

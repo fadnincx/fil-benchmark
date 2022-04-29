@@ -30,12 +30,12 @@ func (_ K3s) GetLotusHosts() []fil_benchmark_exec.Node {
 	resultNode := make([]fil_benchmark_exec.Node, amount, amount)
 
 	for i := 0; i < amount; i++ {
-		err, ip, _ := LocalCmd(fmt.Sprintf("kubectl get pods -o=go-template='{{println `NAME IP`}}{{range .items}}{{.metadata.name}} {{.status.podIP}}{{println ``}}{{end}}' | grep lotus-node-%d | awk '{print $2}'", i))
+		err, ip, _ := LocalCmd(fmt.Sprintf("kubectl get pods -o=go-template='{{println `NAME IP`}}{{range .items}}{{.metadata.name}} {{.status.podIP}}{{println ``}}{{end}}' | grep 'lotus-node-%d ' | awk '{print $2}'", i))
 		if err != nil {
 			log.Printf("error: %v\n", err)
 		}
 		resultNode[i].Ip = strings.TrimSuffix(ip, "\n")
-		err, hostname, _ := LocalCmd(fmt.Sprintf("kubectl get pods -o=go-template='{{println `NAME IP`}}{{range .items}}{{.metadata.name}} {{.status.podIP}}{{println ``}}{{end}}' | grep lotus-node-%d | awk '{print $1}'", i))
+		err, hostname, _ := LocalCmd(fmt.Sprintf("kubectl get pods -o=go-template='{{println `NAME IP`}}{{range .items}}{{.metadata.name}} {{.status.podIP}}{{println ``}}{{end}}' | grep 'lotus-node-%d ' | awk '{print $1}'", i))
 		if err != nil {
 			log.Printf("error: %v\n", err)
 		}
