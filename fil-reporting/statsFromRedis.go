@@ -322,6 +322,9 @@ func redisGetMsgInMultipleTipsets(host string, start int64, stop int64) []uint64
 
 				if stored.FirstKnown >= start && stored.Accepted <= stop && len(stored.MsgCids) > 0 {
 					for _, c := range stored.MsgCids {
+						if cidMap[c] == nil {
+							cidMap[c] = make(map[string]int)
+						}
 						cidMap[c][stored.TipsetEpoch] = cidMap[c][stored.TipsetEpoch] + 1
 					}
 				}
