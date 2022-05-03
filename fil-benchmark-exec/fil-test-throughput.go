@@ -16,13 +16,14 @@ func RunTestcases(cases []datastructures.TestCase, nodes []datastructures.Node, 
 	var wsWriteChan = make([]chan string, len(nodes))
 	var wsReadChan = make([]chan string, len(nodes))
 	var wsInteruptChan = make([]chan bool, len(nodes))
+	var wsLastCid = make([]string, len(nodes))
 	for i := range nodes {
 
 		wsWriteChan[i] = make(chan string, 2) // Size 2 as a small buffer, when on limit to channel saturation
 		wsReadChan[i] = make(chan string, 2)  // Size 2 as a small buffer, when on limit to channel saturation
-
+		wsLastCid[i] = ""
 		// Process Send response and output CIDs to reporting
-		go func(input chan string, cidChan chan string) {
+		go func(input chan string, cidChan chan string, lastCid *string) {
 			for {
 				s := <-input
 				var f interface{}
@@ -42,6 +43,7 @@ func RunTestcases(cases []datastructures.TestCase, nodes []datastructures.Node, 
 								if c != nil {
 									cid := c["/"].(string)
 									cidChan <- cid
+									lastCid = &cid
 								}
 							}
 						}
@@ -49,7 +51,7 @@ func RunTestcases(cases []datastructures.TestCase, nodes []datastructures.Node, 
 				}
 
 			}
-		}(wsReadChan[i], report.CidChan)
+		}(wsReadChan[i], report.CidChan, &wsLastCid[i])
 		wsInteruptChan[i] = make(chan bool)
 
 		// Start Websocket connection
@@ -93,7 +95,11 @@ func RunTestcases(cases []datastructures.TestCase, nodes []datastructures.Node, 
 		for i := range nodes {
 			stopRateChan[i] <- true
 		}
-
+		time.Sleep(5 * time.Second)
+		for i := range nodes {
+			wsWriteChan[i] <- "{\"jsonrpc\":\"2.0\",\"method\":\"Filecoin.StateWaitMsg\",\"params\":[{\"/\":\"" + wsLastCid[i] + "\"},42}],\"id\":" + strconv.Itoa(0) + "}"
+			wsWriteChan[i] <- "{\"jsonrpc\":\"2.0\",\"method\":\"Filecoin.Discover\",\"params\":null,\"id\":" + strconv.Itoa(1) + "}"
+		}
 		time.Sleep(15 * time.Second)
 
 	}
@@ -115,7 +121,7 @@ func sendAtRate(sendChannel chan string, stop chan bool, rate float64, senderAdd
 		select {
 		case <-stop:
 			time.Sleep(5 * time.Second)
-			sendChannel <- "{\"jsonrpc\":\"2.0\",\"method\":\"Filecoin.MpoolClear\",\"params\":[true],\"id\":" + strconv.Itoa(sendId) + "}"
+			// sendChannel <- "{\"jsonrpc\":\"2.0\",\"method\":\"Filecoin.MpoolClear\",\"params\":[true],\"id\":" + strconv.Itoa(sendId) + "}"
 			return
 		default:
 			sendChannel <- "{\"jsonrpc\":\"2.0\",\"method\":\"Filecoin.MpoolPushMessage\",\"params\":[{\"Version\":0,\"To\":\"" + receiverAddress + "\",\"From\":\"" + senderAddress + "\",\"Value\":\"" + amount + "\",\"GasLimit\":0,\"GasFeeCap\":\"0\",\"GasPremium\":\"0\",\"Method\":0,\"CID\":{}},{\"MaxFee\":\"0\"}],\"id\":" + strconv.Itoa(sendId) + "}"
