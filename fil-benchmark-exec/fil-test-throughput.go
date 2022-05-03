@@ -16,14 +16,13 @@ func RunTestcases(cases []datastructures.TestCase, nodes []datastructures.Node, 
 	var wsWriteChan = make([]chan string, len(nodes))
 	var wsReadChan = make([]chan string, len(nodes))
 	var wsInteruptChan = make([]chan bool, len(nodes))
-	var wsLastCid = make([]string, len(nodes))
+	var sentCidChan = datastructures.NewUnboundedChan(1000)
 	for i := range nodes {
 
 		wsWriteChan[i] = make(chan string, 2) // Size 2 as a small buffer, when on limit to channel saturation
 		wsReadChan[i] = make(chan string, 2)  // Size 2 as a small buffer, when on limit to channel saturation
-		wsLastCid[i] = ""
 		// Process Send response and output CIDs to reporting
-		go func(input chan string, cidChan chan string, lastCid *string) {
+		go func(input chan string, cidChan []chan<- string) {
 			for {
 				s := <-input
 				var f interface{}
@@ -42,8 +41,9 @@ func RunTestcases(cases []datastructures.TestCase, nodes []datastructures.Node, 
 								c := cidmap.(map[string]interface{})
 								if c != nil {
 									cid := c["/"].(string)
-									cidChan <- cid
-									lastCid = &cid
+									for _, cidchan := range cidChan {
+										cidchan <- cid
+									}
 								}
 							}
 						}
@@ -51,7 +51,7 @@ func RunTestcases(cases []datastructures.TestCase, nodes []datastructures.Node, 
 				}
 
 			}
-		}(wsReadChan[i], report.CidChan, &wsLastCid[i])
+		}(wsReadChan[i], []chan<- string{report.CidChan, sentCidChan.In})
 		wsInteruptChan[i] = make(chan bool)
 
 		// Start Websocket connection
@@ -95,13 +95,13 @@ func RunTestcases(cases []datastructures.TestCase, nodes []datastructures.Node, 
 		for i := range nodes {
 			stopRateChan[i] <- true
 		}
-		time.Sleep(5 * time.Second)
-		for i := range nodes {
-			if wsLastCid[i] != "" {
-				wsWriteChan[i] <- "{\"jsonrpc\":\"2.0\",\"method\":\"Filecoin.StateWaitMsg\",\"params\":[{\"/\":\"" + wsLastCid[i] + "\"},42}],\"id\":" + strconv.Itoa(0) + "}"
-				wsWriteChan[i] <- "{\"jsonrpc\":\"2.0\",\"method\":\"Filecoin.Discover\",\"params\":null,\"id\":" + strconv.Itoa(1) + "}"
+		for cid := <-sentCidChan.Out; sentCidChan.Len() > 0; cid = <-sentCidChan.Out {
+			err := returnWhenMessageIsAccepted(cid)
+			if err != nil {
+				fmt.Printf("Error %v\n", err)
 			}
 		}
+
 		time.Sleep(15 * time.Second)
 
 	}

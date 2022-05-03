@@ -3,6 +3,7 @@ package fil_reporting
 import (
 	"encoding/json"
 	"fil-benchmark/datastructures"
+	"fil-benchmark/utils"
 	"fmt"
 	"github.com/go-redis/redis"
 	"sort"
@@ -12,9 +13,6 @@ import (
  * Get stats about processed messages
  */
 func redisGetMsgStats(cids []string, hosts []string) []datastructures.Stats {
-
-	// Make sure client is initialized
-	redisInitClient()
 
 	// Init stats per host
 	var stats []datastructures.Stats
@@ -33,7 +31,7 @@ func redisGetMsgStats(cids []string, hosts []string) []datastructures.Stats {
 		for _, cid := range cids {
 
 			// Get cid date on host
-			val, err := redisClient.Get(cid + "-" + host).Result()
+			val, err := utils.GetRedisHelper().RedisClient.Get(cid + "-" + host).Result()
 			if err == redis.Nil {
 				// Ignore no such entry
 			} else if err != nil {
@@ -82,9 +80,6 @@ func redisGetMsgStats(cids []string, hosts []string) []datastructures.Stats {
  */
 func redisGetMsgNetDelay(cids []string, hosts []string) []datastructures.Stats {
 
-	// Make sure client is initialized
-	redisInitClient()
-
 	// Init stats per host
 	var stats []datastructures.Stats
 	var entries [][][]uint64 = make([][][]uint64, len(hosts))
@@ -105,7 +100,7 @@ func redisGetMsgNetDelay(cids []string, hosts []string) []datastructures.Stats {
 		for i, host := range hosts {
 
 			// Get cid date on host
-			val, err := redisClient.Get(cid + "-" + host).Result()
+			val, err := utils.GetRedisHelper().RedisClient.Get(cid + "-" + host).Result()
 			if err == redis.Nil {
 				// Ignore no such entry
 			} else if err != nil {
@@ -133,7 +128,7 @@ func redisGetMsgNetDelay(cids []string, hosts []string) []datastructures.Stats {
 
 			for i, host := range hosts {
 				// Get cid date on host
-				val, err := redisClient.Get(cid + "-" + host).Result()
+				val, err := utils.GetRedisHelper().RedisClient.Get(cid + "-" + host).Result()
 				if err == redis.Nil {
 					// Ignore no such entry
 				} else if err != nil {
@@ -184,20 +179,19 @@ func redisGetMsgNetDelay(cids []string, hosts []string) []datastructures.Stats {
  * Get Block stats
  */
 func redisGetBlockStats(hosts []string, start int64, stop int64) []datastructures.BlockLogAgg {
-	redisInitClient()
 	var cursor uint64
 	var agg = make([]datastructures.BlockLogAgg, 0)
 	for host_id, host := range hosts {
 		for {
 			var keys []string
 			var err error
-			keys, cursor, err = redisClient.Scan(cursor, "*-b-"+host+"*", 0).Result()
+			keys, cursor, err = utils.GetRedisHelper().RedisClient.Scan(cursor, "*-b-"+host+"*", 0).Result()
 			if err != nil {
 				fmt.Println(err)
 				return nil
 			}
 			for _, key := range keys {
-				val, err := redisClient.Get(key).Result()
+				val, err := utils.GetRedisHelper().RedisClient.Get(key).Result()
 				if err == redis.Nil {
 					// Ignore no such entry
 				} else if err != nil {
@@ -248,20 +242,19 @@ func redisGetBlockStats(hosts []string, start int64, stop int64) []datastructure
 }
 
 func redisGetMsgInMultipleBlocksStats(host string, start int64, stop int64) []uint64 {
-	redisInitClient()
 	var cursor uint64
 	var cidMap = make(map[string]int)
 
 	for {
 		var keys []string
 		var err error
-		keys, cursor, err = redisClient.Scan(cursor, "*-b-"+host+"*", 0).Result()
+		keys, cursor, err = utils.GetRedisHelper().RedisClient.Scan(cursor, "*-b-"+host+"*", 0).Result()
 		if err != nil {
 			fmt.Println(err)
 			return nil
 		}
 		for _, key := range keys {
-			val, err := redisClient.Get(key).Result()
+			val, err := utils.GetRedisHelper().RedisClient.Get(key).Result()
 			if err == redis.Nil {
 				// Ignore no such entry
 			} else if err != nil {
@@ -295,20 +288,20 @@ func redisGetMsgInMultipleBlocksStats(host string, start int64, stop int64) []ui
 }
 
 func redisGetMsgInMultipleTipsets(host string, start int64, stop int64) []uint64 {
-	redisInitClient()
+
 	var cursor uint64
 	var cidMap = make(map[string]map[string]int)
 
 	for {
 		var keys []string
 		var err error
-		keys, cursor, err = redisClient.Scan(cursor, "*-b-"+host+"*", 0).Result()
+		keys, cursor, err = utils.GetRedisHelper().RedisClient.Scan(cursor, "*-b-"+host+"*", 0).Result()
 		if err != nil {
 			fmt.Println(err)
 			return nil
 		}
 		for _, key := range keys {
-			val, err := redisClient.Get(key).Result()
+			val, err := utils.GetRedisHelper().RedisClient.Get(key).Result()
 			if err == redis.Nil {
 				// Ignore no such entry
 			} else if err != nil {
