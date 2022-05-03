@@ -97,8 +97,10 @@ func RunTestcases(cases []datastructures.TestCase, nodes []datastructures.Node, 
 		}
 		time.Sleep(5 * time.Second)
 		for i := range nodes {
-			wsWriteChan[i] <- "{\"jsonrpc\":\"2.0\",\"method\":\"Filecoin.StateWaitMsg\",\"params\":[{\"/\":\"" + wsLastCid[i] + "\"},42}],\"id\":" + strconv.Itoa(0) + "}"
-			wsWriteChan[i] <- "{\"jsonrpc\":\"2.0\",\"method\":\"Filecoin.Discover\",\"params\":null,\"id\":" + strconv.Itoa(1) + "}"
+			if wsLastCid[i] != "" {
+				wsWriteChan[i] <- "{\"jsonrpc\":\"2.0\",\"method\":\"Filecoin.StateWaitMsg\",\"params\":[{\"/\":\"" + wsLastCid[i] + "\"},42}],\"id\":" + strconv.Itoa(0) + "}"
+				wsWriteChan[i] <- "{\"jsonrpc\":\"2.0\",\"method\":\"Filecoin.Discover\",\"params\":null,\"id\":" + strconv.Itoa(1) + "}"
+			}
 		}
 		time.Sleep(15 * time.Second)
 
