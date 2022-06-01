@@ -15,11 +15,9 @@ import (
  */
 func main() {
 
-	// Get current nodes
-	nodes := testbed.GetTestBed().GetLotusHosts()
+	lotusDevnetPath := "../fil-lotus-devnet"
 
 	// Define the testcases
-
 	testcaseFile := "exampleTest.yml"
 	if len(os.Args) == 2 {
 		testcaseFile = os.Args[1]
@@ -28,10 +26,27 @@ func main() {
 	log.Printf("Use testcase: %s\n", filepath.Join(pwd, testcaseFile))
 	testcases := datastructures.ReadTestcaseYaml(filepath.Join(pwd, testcaseFile))
 
-	// Init Reporting
-	report := reporting.StartTestReport(nodes)
+	for _, testcase := range testcases {
 
-	// Run test
-	benchmark.RunTestcases(testcases, nodes, report)
+		for i := 0; i < testcase.Repetition; i++ {
+
+			// Start testbed
+			testbed.GetTestBed().DeployTestbed(lotusDevnetPath, testcase.NodeCount, testcase.Topology, testcase.SingleBlock)
+
+			// Get current nodes
+			nodes := testbed.GetTestBed().GetLotusHosts()
+
+			// Init Reporting
+			report := reporting.StartTestReport(nodes)
+
+			// Run test
+			benchmark.RunTestcase(testcase, nodes, report)
+
+			// Stop testbed
+			testbed.GetTestBed().StopTestbed(lotusDevnetPath)
+			
+		}
+
+	}
 
 }

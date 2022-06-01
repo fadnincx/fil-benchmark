@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func RunTestcases(cases []datastructures.TestCase, nodes []datastructures.Node, report fil_reporting.ReportResults) {
+func RunTestcase(testc datastructures.TestCase, nodes []datastructures.Node, report fil_reporting.ReportResults) {
 
 	// Setup all websocket connections to the nodes
 	var wsWriteChan = make([]chan string, len(nodes))
@@ -60,51 +60,48 @@ func RunTestcases(cases []datastructures.TestCase, nodes []datastructures.Node, 
 
 	time.Sleep(5 * time.Second)
 
-	for _, testc := range cases {
+	log.Printf("Start test case %v\n", testc)
 
-		log.Printf("Start test case %v\n", testc)
+	// Wait unitl ready for next
+	log.Println("Wait for logging to be ready")
+	<-report.ReadyForNextTest
 
-		// Wait unitl ready for next
-		log.Println("Wait for logging to be ready")
-		<-report.ReadyForNextTest
+	var stopRateChan = make([]chan bool, len(nodes))
 
-		var stopRateChan = make([]chan bool, len(nodes))
+	report.TestStatusChan <- "startrate"
+	report.TestDataChain <- fmt.Sprintf("%v", testc.MsgPerSec)
 
-		report.TestStatusChan <- "startrate"
-		report.TestDataChain <- fmt.Sprintf("%v", testc.MsgPerSec)
-
-		// Start rate
-		for i := range nodes {
-			stopRateChan[i] = make(chan bool)
-			go sendAtRate(wsWriteChan[i], stopRateChan[i], testc.MsgPerSec/float64(len(nodes)), nodes[i].SendWallet, nodes[(i+1)%len(nodes)].SendWallet, "10")
-		}
-
-		report.TestStatusChan <- "waitsaturation"
-
-		// Wait 90s for full saturation
-		time.Sleep(90 * time.Second)
-
-		report.TestStatusChan <- "start"
-
-		// Sleep duration
-		time.Sleep(time.Duration(testc.Duration * 1e9))
-
-		report.TestStatusChan <- "stop"
-
-		// Stop rate
-		for i := range nodes {
-			stopRateChan[i] <- true
-		}
-		for cid := <-sentCidChan.Out; sentCidChan.Len() > 0; cid = <-sentCidChan.Out {
-			err := returnWhenMessageIsAccepted(cid)
-			if err != nil {
-				fmt.Printf("Error %v\n", err)
-			}
-		}
-
-		time.Sleep(15 * time.Second)
-
+	// Start rate
+	for i := range nodes {
+		stopRateChan[i] = make(chan bool)
+		go sendAtRate(wsWriteChan[i], stopRateChan[i], testc.MsgPerSec/float64(len(nodes)), nodes[i].SendWallet, nodes[(i+1)%len(nodes)].SendWallet, "10")
 	}
+
+	report.TestStatusChan <- "waitsaturation"
+
+	// Wait 90s for full saturation
+	time.Sleep(90 * time.Second)
+
+	report.TestStatusChan <- "start"
+
+	// Sleep duration
+	time.Sleep(time.Duration(testc.Duration * 1e9))
+
+	report.TestStatusChan <- "stop"
+
+	// Stop rate
+	for i := range nodes {
+		stopRateChan[i] <- true
+	}
+	/*for cid := <-sentCidChan.Out; sentCidChan.Len() > 0; cid = <-sentCidChan.Out {
+		err := returnWhenMessageIsAccepted(cid)
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+	}
+
+	time.Sleep(15 * time.Second)*/
+
 	log.Println("Finished tests")
 
 	// Stop websocket

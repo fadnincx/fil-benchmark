@@ -71,6 +71,32 @@ func (_ K3s) GetRedisHost() string {
 
 	return ""
 }
+
+func (_ K3s) DeployTestbed(filLotusDevnetPath string, nodeCount uint64, topology string, singleBlock bool) {
+	checkIsRoot()
+
+	sb := "false"
+	if singleBlock {
+		sb = "true"
+	}
+	log.Printf("Deploy command: %s", fmt.Sprintf("cd %s && ./build_start.sh %d %s %s", filLotusDevnetPath, nodeCount, topology, sb))
+	err, sout, eout := LocalCmd(fmt.Sprintf("cd %s && ./build_start.sh %d %s %s", filLotusDevnetPath, nodeCount, topology, sb))
+	if err != nil {
+		log.Printf("error launching testbed: %v\n", err)
+	}
+	fmt.Println(sout)
+	fmt.Fprintln(os.Stderr, eout)
+	log.Println("Deployed Testbed")
+}
+
+func (_ K3s) StopTestbed(filLotusDevnetPath string) {
+	checkIsRoot()
+	err, _, _ := LocalCmd(fmt.Sprintf("cd %s && ./stop.sh", filLotusDevnetPath))
+	if err != nil {
+		log.Printf("error stopping testbed: %v\n", err)
+	}
+}
+
 func checkIsRoot() {
 	if whoami() != "root" {
 		fmt.Fprintf(os.Stderr, "NEED TO RUN AS ROOT!\n")

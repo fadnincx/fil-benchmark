@@ -2,4 +2,4 @@
 tests:
   - name: "Example Test"
     duration: 180 # in seconds
-    msgPerSecPer: 1
+    msgPerSec: 1
