@@ -40,6 +40,7 @@ func (rh *RedisHelper) redisInitClient() {
 		redisIP := testbed.GetTestBed().GetRedisHost()
 		if !is_ipv4(redisIP) {
 			log.Printf("Redis IP %s is not valid ipv4", redisIP)
+			rh.redisMutex.Unlock()
 			return
 		}
 		rh.redisClient = redis.NewClient(&redis.Options{
@@ -47,6 +48,7 @@ func (rh *RedisHelper) redisInitClient() {
 			Password: "",
 			DB:       0,
 		})
+		log.Printf("Redis initialized with ip %s\n", redisIP)
 	}
 	rh.redisMutex.Unlock()
 }

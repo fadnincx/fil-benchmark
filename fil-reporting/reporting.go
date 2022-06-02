@@ -80,15 +80,15 @@ func testReport(nodes []fil_benchmark_exec.Node, cids chan string, testStatus ch
 			case "stop":
 				stoptime = time.Now().UnixMicro()
 				cidDo <- "get"
-				go doStats(hosts, rate, <-cidAgg, uint64(starttime), uint64(stoptime))
-				ready4Next <- true
+				go doStats(hosts, rate, <-cidAgg, uint64(starttime), uint64(stoptime), ready4Next)
+
 			default:
 				log.Printf("Warning unknown test status receiverd: '%s'\n", d)
 			}
 		}
 	}
 }
-func doStats(hosts []string, rate float64, cids []string, starttime uint64, stoptime uint64) {
+func doStats(hosts []string, rate float64, cids []string, starttime uint64, stoptime uint64, ready4Next chan bool) {
 
 	// Get Msg Stats
 	msgStats := redisGetMsgStats(cids, hosts)
@@ -125,6 +125,7 @@ func doStats(hosts []string, rate float64, cids []string, starttime uint64, stop
 	fmt.Printf("Rate %v has %v messages with %vus delay\n", rate, msgStats[0].Amount, msgStats[0].Avg)
 
 	doBlockStats(hosts, int64(starttime), int64(stoptime))
+	ready4Next <- true
 }
 
 func doBlockStats(hosts []string, starttime int64, stoptime int64) {

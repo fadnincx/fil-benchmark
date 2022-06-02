@@ -5,6 +5,7 @@ import (
 	testbed "fil-benchmark/external-testbed"
 	benchmark "fil-benchmark/fil-benchmark-exec"
 	reporting "fil-benchmark/fil-reporting"
+	"fil-benchmark/utils"
 	"log"
 	"os"
 	"path/filepath"
@@ -39,12 +40,15 @@ func main() {
 			// Init Reporting
 			report := reporting.StartTestReport(nodes)
 
+			// Test and init Redis
+			utils.GetRedisHelper().GetClient().Get("Test").Result()
+
 			// Run test
 			benchmark.RunTestcase(testcase, nodes, report)
 
 			// Stop testbed
 			testbed.GetTestBed().StopTestbed(lotusDevnetPath)
-			
+
 		}
 
 	}
