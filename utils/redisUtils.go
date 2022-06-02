@@ -3,33 +3,68 @@ package utils
 import (
 	testbed "fil-benchmark/external-testbed"
 	"github.com/go-redis/redis"
+	"log"
+	"strconv"
+	"strings"
 	"sync"
 )
 
 var rhelper *RedisHelper
 
 type RedisHelper struct {
-	RedisClient *redis.Client
-	RedisMutex  sync.Mutex
+	redisClient *redis.Client
+	redisMutex  sync.Mutex
 }
 
 func init() {
 	rhelper = &RedisHelper{
-		RedisClient: nil,
+		redisClient: nil,
 	}
 	rhelper.redisInitClient()
 }
 func GetRedisHelper() *RedisHelper {
 	return rhelper
 }
+func (rh *RedisHelper) GetClient() *redis.Client {
+	rh.redisMutex.Lock()
+	_, err := rh.redisClient.Ping().Result()
+	if err != nil {
+		rh.redisClient = nil
+		rh.redisInitClient()
+	}
+	return rh.redisClient
+}
 func (rh *RedisHelper) redisInitClient() {
-	rh.RedisMutex.Lock()
-	if rh.RedisClient == nil {
-		rh.RedisClient = redis.NewClient(&redis.Options{
-			Addr:     testbed.GetTestBed().GetRedisHost() + ":6379",
+	rh.redisMutex.Lock()
+	if rh.redisClient == nil {
+		redisIP := testbed.GetTestBed().GetRedisHost()
+		if !is_ipv4(redisIP) {
+			log.Fatalf("Redis IP %s is not valid ipv4", redisIP)
+		}
+		rh.redisClient = redis.NewClient(&redis.Options{
+			Addr:     redisIP + ":6379",
 			Password: "",
 			DB:       0,
 		})
 	}
-	rh.RedisMutex.Unlock()
+	rh.redisMutex.Unlock()
+}
+func is_ipv4(host string) bool {
+	parts := strings.Split(host, ".")
+
+	if len(parts) < 4 {
+		return false
+	}
+
+	for _, x := range parts {
+		if i, err := strconv.Atoi(x); err == nil {
+			if i < 0 || i > 255 {
+				return false
+			}
+		} else {
+			return false
+		}
+
+	}
+	return true
 }

@@ -18,13 +18,13 @@ func returnWhenMessageIsAccepted(cid string) error {
 		for {
 			var keys []string
 			var err error
-			keys, cursor, err = utils.GetRedisHelper().RedisClient.Scan(cursor, cid+"-*", 0).Result()
+			keys, cursor, err = utils.GetRedisHelper().GetClient().Scan(cursor, cid+"-*", 0).Result()
 			if err != nil {
 				fmt.Println(err)
 				return errors.New("error scanning redis")
 			}
 			for _, key := range keys {
-				val, err := utils.GetRedisHelper().RedisClient.Get(key).Result()
+				val, err := utils.GetRedisHelper().GetClient().Get(key).Result()
 				if err == redis.Nil {
 					// Ignore no such entry
 				} else if err != nil {

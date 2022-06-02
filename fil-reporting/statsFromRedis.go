@@ -31,7 +31,7 @@ func redisGetMsgStats(cids []string, hosts []string) []datastructures.Stats {
 		for _, cid := range cids {
 
 			// Get cid date on host
-			val, err := utils.GetRedisHelper().RedisClient.Get(cid + "-" + host).Result()
+			val, err := utils.GetRedisHelper().GetClient().Get(cid + "-" + host).Result()
 			if err == redis.Nil {
 				// Ignore no such entry
 			} else if err != nil {
@@ -100,7 +100,7 @@ func redisGetMsgNetDelay(cids []string, hosts []string) []datastructures.Stats {
 		for i, host := range hosts {
 
 			// Get cid date on host
-			val, err := utils.GetRedisHelper().RedisClient.Get(cid + "-" + host).Result()
+			val, err := utils.GetRedisHelper().GetClient().Get(cid + "-" + host).Result()
 			if err == redis.Nil {
 				// Ignore no such entry
 			} else if err != nil {
@@ -128,7 +128,7 @@ func redisGetMsgNetDelay(cids []string, hosts []string) []datastructures.Stats {
 
 			for i, host := range hosts {
 				// Get cid date on host
-				val, err := utils.GetRedisHelper().RedisClient.Get(cid + "-" + host).Result()
+				val, err := utils.GetRedisHelper().GetClient().Get(cid + "-" + host).Result()
 				if err == redis.Nil {
 					// Ignore no such entry
 				} else if err != nil {
@@ -185,13 +185,13 @@ func redisGetBlockStats(hosts []string, start int64, stop int64) []datastructure
 		for {
 			var keys []string
 			var err error
-			keys, cursor, err = utils.GetRedisHelper().RedisClient.Scan(cursor, "*-b-"+host+"*", 0).Result()
+			keys, cursor, err = utils.GetRedisHelper().GetClient().Scan(cursor, "*-b-"+host+"*", 0).Result()
 			if err != nil {
 				fmt.Println(err)
 				return nil
 			}
 			for _, key := range keys {
-				val, err := utils.GetRedisHelper().RedisClient.Get(key).Result()
+				val, err := utils.GetRedisHelper().GetClient().Get(key).Result()
 				if err == redis.Nil {
 					// Ignore no such entry
 				} else if err != nil {
@@ -248,13 +248,13 @@ func redisGetMsgInMultipleBlocksStats(host string, start int64, stop int64) []ui
 	for {
 		var keys []string
 		var err error
-		keys, cursor, err = utils.GetRedisHelper().RedisClient.Scan(cursor, "*-b-"+host+"*", 0).Result()
+		keys, cursor, err = utils.GetRedisHelper().GetClient().Scan(cursor, "*-b-"+host+"*", 0).Result()
 		if err != nil {
 			fmt.Println(err)
 			return nil
 		}
 		for _, key := range keys {
-			val, err := utils.GetRedisHelper().RedisClient.Get(key).Result()
+			val, err := utils.GetRedisHelper().GetClient().Get(key).Result()
 			if err == redis.Nil {
 				// Ignore no such entry
 			} else if err != nil {
@@ -295,13 +295,13 @@ func redisGetMsgInMultipleTipsets(host string, start int64, stop int64) []uint64
 	for {
 		var keys []string
 		var err error
-		keys, cursor, err = utils.GetRedisHelper().RedisClient.Scan(cursor, "*-b-"+host+"*", 0).Result()
+		keys, cursor, err = utils.GetRedisHelper().GetClient().Scan(cursor, "*-b-"+host+"*", 0).Result()
 		if err != nil {
 			fmt.Println(err)
 			return nil
 		}
 		for _, key := range keys {
-			val, err := utils.GetRedisHelper().RedisClient.Get(key).Result()
+			val, err := utils.GetRedisHelper().GetClient().Get(key).Result()
 			if err == redis.Nil {
 				// Ignore no such entry
 			} else if err != nil {
