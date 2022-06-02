@@ -27,11 +27,19 @@ func GetRedisHelper() *RedisHelper {
 }
 func (rh *RedisHelper) GetClient() *redis.Client {
 	rh.redisMutex.Lock()
+	if rh.redisClient == nil {
+		rh.redisMutex.Unlock()
+		rh.redisInitClient()
+		rh.redisMutex.Lock()
+	}
 	_, err := rh.redisClient.Ping().Result()
 	if err != nil {
 		rh.redisClient = nil
+		rh.redisMutex.Unlock()
 		rh.redisInitClient()
+		rh.redisMutex.Lock()
 	}
+	rh.redisMutex.Unlock()
 	return rh.redisClient
 }
 func (rh *RedisHelper) redisInitClient() {
