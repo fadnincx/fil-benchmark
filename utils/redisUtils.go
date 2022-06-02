@@ -39,7 +39,8 @@ func (rh *RedisHelper) redisInitClient() {
 	if rh.redisClient == nil {
 		redisIP := testbed.GetTestBed().GetRedisHost()
 		if !is_ipv4(redisIP) {
-			log.Fatalf("Redis IP %s is not valid ipv4", redisIP)
+			log.Printf("Redis IP %s is not valid ipv4", redisIP)
+			return
 		}
 		rh.redisClient = redis.NewClient(&redis.Options{
 			Addr:     redisIP + ":6379",
