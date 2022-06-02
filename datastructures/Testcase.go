@@ -39,19 +39,19 @@ func ReadTestcaseYaml(filename string) []TestCase {
 
 	// Parse if default values are overwritten
 	if val, ok := yamlFistLayerMap["duration"]; ok {
-		duration, err := strconv.ParseUint(fmt.Sprintf("%test", val), 10, 64)
+		duration, err := strconv.ParseUint(fmt.Sprintf("%v", val), 10, 64)
 		if err == nil {
 			globalDuration = duration
 		}
 	}
 	if val, ok := yamlFistLayerMap["repetition"]; ok {
-		repetition, err := strconv.Atoi(fmt.Sprintf("%test", val))
+		repetition, err := strconv.Atoi(fmt.Sprintf("%v", val))
 		if err == nil {
 			globalRepetition = repetition
 		}
 	}
 	if val, ok := yamlFistLayerMap["nodeCount"]; ok {
-		nodeCount, err := strconv.ParseUint(fmt.Sprintf("%test", val), 10, 64)
+		nodeCount, err := strconv.ParseUint(fmt.Sprintf("%v", val), 10, 64)
 		if err == nil {
 			globalNodeCount = nodeCount
 		}
@@ -60,7 +60,7 @@ func ReadTestcaseYaml(filename string) []TestCase {
 		globalTopology = fmt.Sprintf("%test", val)
 	}
 	if val, ok := yamlFistLayerMap["singleBlock"]; ok {
-		singleBlock, err := strconv.ParseBool(fmt.Sprintf("%test", val))
+		singleBlock, err := strconv.ParseBool(fmt.Sprintf("%v", val))
 		if err == nil {
 			globalSingleBlock = singleBlock
 		}
