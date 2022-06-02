@@ -91,10 +91,12 @@ func (_ K3s) DeployTestbed(filLotusDevnetPath string, nodeCount uint64, topology
 
 func (_ K3s) StopTestbed(filLotusDevnetPath string) {
 	checkIsRoot()
+	log.Println("Stopping Testbed")
 	err, _, _ := LocalCmd(fmt.Sprintf("cd %s && ./stop.sh", filLotusDevnetPath))
 	if err != nil {
 		log.Printf("error stopping testbed: %v\n", err)
 	}
+	log.Println("Stopped Testbed")
 }
 
 func checkIsRoot() {

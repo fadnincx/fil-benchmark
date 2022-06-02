@@ -101,6 +101,7 @@ func RunTestcase(testc datastructures.TestCase, nodes []datastructures.Node, rep
 	}
 
 	time.Sleep(15 * time.Second)*/
+	<-report.ReadyForNextTest
 
 	log.Println("Finished tests")
 
